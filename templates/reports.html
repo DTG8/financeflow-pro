@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+
+{% block title %}Reports - FinanceFlow Pro{% endblock %}
+
+{% block extra_styles %}
+    <style>
+    .chart-card {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .chart-header {
+            margin-bottom: 20px;
+        }
+    
+    .chart-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+    }
+    
+    .chart-subtitle {
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+    
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    
+    .summary-card {
+        background: linear-gradient(135deg, var(--primary), var(--info));
+            color: white;
+        border-radius: var(--radius-lg);
+            padding: 20px;
+        text-align: center;
+    }
+    
+    .summary-card.success {
+        background: linear-gradient(135deg, var(--success), #0B7A44);
+    }
+    
+    .summary-card.warning {
+        background: linear-gradient(135deg, var(--warning), #E37400);
+    }
+    
+    .summary-value {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+    
+    .summary-label {
+        font-size: 12px;
+        opacity: 0.9;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    
+    <!-- Page Header -->
+    <div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h1 class="page-title">Financial Reports</h1>
+            <p class="page-subtitle">Revenue trends, analytics, and performance insights</p>
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <a href="/export/monthly-customer-report" class="btn-primary" style="text-decoration: none;">
+                <i class="fas fa-calendar-alt"></i> Monthly Customer Report
+            </a>
+            <a href="/export/reports/csv" class="btn-primary-clean" style="text-decoration: none;">
+                <i class="fas fa-file-csv"></i> Export CSV
+            </a>
+            <a href="/export/reports/excel" class="btn-primary-clean" style="text-decoration: none;">
+                <i class="fas fa-file-excel"></i> Export Excel
+            </a>
+            <a href="/export/reports/pdf" class="btn-primary-clean" style="text-decoration: none;">
+                <i class="fas fa-file-pdf"></i> Export PDF
+                </a>
+            </div>
+        </div>
+    
+    <!-- Summary Cards -->
+    <div class="summary-grid">
+        <div class="summary-card success">
+            <div class="summary-value" id="totalRevenue">₦0</div>
+            <div class="summary-label">Total Revenue</div>
+            </div>
+        <div class="summary-card">
+            <div class="summary-value" id="totalTransactions">0</div>
+            <div class="summary-label">Total Transactions</div>
+        </div>
+        <div class="summary-card warning">
+            <div class="summary-value" id="avgTransaction">₦0</div>
+            <div class="summary-label">Avg Transaction</div>
+            </div>
+        </div>
+
+    <!-- Daily Revenue Chart -->
+    <div class="chart-card">
+        <div class="chart-header">
+            <div class="chart-title">Daily Revenue Trend</div>
+            <div class="chart-subtitle">All-time revenue performance</div>
+                </div>
+        <canvas id="dailyChart" height="80"></canvas>
+        </div>
+
+    <!-- Bank Distribution Chart -->
+    <div class="row">
+        <div class="col-lg-6">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title">Revenue by Bank</div>
+                    <div class="chart-subtitle">Distribution across payment channels</div>
+            </div>
+                            <canvas id="bankChart"></canvas>
+                        </div>
+                    </div>
+        <div class="col-lg-6">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title">Transaction Volume</div>
+                    <div class="chart-subtitle">Count by payment channel</div>
+        </div>
+                            <canvas id="volumeChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+                            </div>
+{% endblock %}
+
+{% block extra_scripts %}
+    <script>
+function loadReports() {
+    fetch('/api/reports?days=0&_=' + new Date().getTime())
+        .then(res => res.json())
+        .then(data => {
+            // Update summary cards with API data
+            document.getElementById('totalRevenue').textContent = '₦' + data.total_revenue.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0});
+            document.getElementById('totalTransactions').textContent = data.total_transactions.toLocaleString();
+            document.getElementById('avgTransaction').textContent = '₦' + data.avg_transaction.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0});
+            
+            // Daily revenue chart
+            createDailyChart(data.daily);
+            
+            // Bank distribution charts
+            createBankCharts(data.banks);
+        })
+        .catch(err => console.error('Error loading reports:', err));
+}
+
+function createDailyChart(data) {
+    const ctx = document.getElementById('dailyChart').getContext('2d');
+    new Chart(ctx, {
+                type: 'line',
+                data: {
+                    datasets: [{
+                label: 'Revenue',
+                data: data.map(d => ({
+                    x: d.date,
+                    y: d.amount
+                })),
+                borderColor: '#1A73E8',
+                backgroundColor: 'rgba(26, 115, 232, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        title: function(context) {
+                            const date = new Date(context[0].parsed.x);
+                            return date.toLocaleDateString('en-US', { 
+                                year: 'numeric', 
+                                month: 'short', 
+                                day: 'numeric' 
+                            });
+                        },
+                        label: function(context) {
+                            return '₦' + context.parsed.y.toLocaleString();
+                        }
+                    }
+                }
+            },
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'day',
+                                displayFormats: {
+                                    day: 'MMM d',
+                                    month: 'MMM yyyy'
+                                },
+                                tooltipFormat: 'MMM d, yyyy'
+                            },
+                            ticks: {
+                                maxRotation: 45,
+                                minRotation: 45,
+                                autoSkip: true,
+                                maxTicksLimit: 30
+                            }
+                        },
+                        y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '₦' + value.toLocaleString();
+                        }
+                    }
+                        }
+                    }
+                }
+            });
+}
+
+function createBankCharts(data) {
+    const colors = ['#1A73E8', '#0F9D58', '#F9AB00', '#EA4335', '#4285F4'];
+
+    // Revenue by bank
+            const bankCtx = document.getElementById('bankChart').getContext('2d');
+    new Chart(bankCtx, {
+                type: 'doughnut',
+                data: {
+            labels: data.map(b => b.bank),
+                    datasets: [{
+                data: data.map(b => b.amount),
+                backgroundColor: colors
+                    }]
+                },
+                options: {
+                    responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.label + ': ₦' + context.parsed.toLocaleString();
+                        }
+                    }
+                        }
+                    }
+                }
+            });
+
+    // Volume by bank
+    const volumeCtx = document.getElementById('volumeChart').getContext('2d');
+    new Chart(volumeCtx, {
+                type: 'bar',
+                data: {
+            labels: data.map(b => b.bank),
+                    datasets: [{
+                label: 'Transactions',
+                data: data.map(b => b.count),
+                backgroundColor: colors
+                    }]
+                },
+                options: {
+                    responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+window.addEventListener('load', loadReports);
+    </script>
+{% endblock %}

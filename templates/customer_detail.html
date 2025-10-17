@@ -1,0 +1,490 @@
+{% extends "base.html" %}
+
+{% block title %}Customer Details - FinanceFlow Pro{% endblock %}
+
+{% block extra_styles %}
+    <style>
+    .customer-profile {
+        background: linear-gradient(135deg, var(--primary), var(--info));
+            color: white;
+        border-radius: var(--radius-lg);
+        padding: 32px;
+        margin-bottom: 24px;
+    }
+    
+    .profile-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+    
+    .profile-avatar {
+        width: 80px;
+        height: 80px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        font-weight: 700;
+        margin-right: 20px;
+    }
+    
+    .profile-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 16px;
+    }
+    
+    .profile-stat {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 16px;
+        border-radius: var(--radius);
+    }
+    
+    .profile-stat-value {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+    
+    .profile-stat-label {
+        font-size: 12px;
+        opacity: 0.9;
+    }
+    
+    .filter-bar {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+            padding: 20px;
+        margin-bottom: 24px;
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    
+    .filter-select {
+        padding: 8px 12px;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        font-size: 14px;
+    }
+    
+    .export-buttons {
+        display: flex;
+        gap: 8px;
+        margin-left: auto;
+    }
+    
+    .btn-export {
+        padding: 8px 16px;
+        border: none;
+        border-radius: var(--radius);
+        background: var(--success);
+        color: white;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .btn-export:hover {
+        background: #0B7A44;
+        transform: translateY(-1px);
+    }
+    
+    .transactions-table-container {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+    }
+    
+    .transactions-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .transactions-table thead {
+        background: var(--bg-tertiary);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+    
+    .transactions-table th {
+        padding: 16px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 12px;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        border-bottom: 2px solid var(--border);
+    }
+    
+    .transactions-table td {
+        padding: 16px;
+        border-bottom: 1px solid var(--border-light);
+        color: var(--text-primary);
+        font-size: 14px;
+    }
+    
+    .transactions-table tbody tr:hover {
+        background: var(--bg-secondary);
+    }
+    
+    .badge {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .badge-card {
+        background: #E3F2FD;
+        color: #1976D2;
+    }
+    
+    .badge-transfer {
+        background: #E8F5E9;
+        color: #388E3C;
+    }
+    
+    .badge-success {
+        background: #E8F5E9;
+        color: #2E7D32;
+        font-weight: 700;
+    }
+    
+    .badge-failed {
+        background: #FFEBEE;
+        color: #C62828;
+    }
+    
+    .badge-pending {
+        background: #FFF3E0;
+        color: #EF6C00;
+    }
+    
+    .badge-ussd {
+        background: #FFF3E0;
+        color: #F57C00;
+    }
+    
+    .badge-bank {
+        background: #F3E5F5;
+        color: #7B1FA2;
+    }
+    
+    .amount-cell {
+        font-weight: 600;
+        color: var(--success);
+    }
+    
+    .back-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        color: var(--text-primary);
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.2s;
+        margin-bottom: 20px;
+    }
+    
+    .back-button:hover {
+        background: var(--bg-tertiary);
+        border-color: var(--primary);
+        color: var(--primary);
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <a href="/customers" class="back-button">
+        <i class="fas fa-arrow-left"></i> Back to Customers
+    </a>
+    
+    <!-- Customer Profile Card -->
+    <div class="customer-profile" id="customerProfile">
+        <div class="profile-header">
+            <div class="profile-avatar" id="profileAvatar">SA</div>
+            <div>
+                <h2 style="margin-bottom: 4px;" id="customerName">Loading...</h2>
+                <p style="opacity: 0.9; margin: 0;" id="customerEmail">{{ customer_identifier }}</p>
+            </div>
+        </div>
+
+        <div class="profile-stats">
+            <div class="profile-stat">
+                <div class="profile-stat-value" id="totalRevenue">₦0</div>
+                <div class="profile-stat-label">Total Revenue</div>
+                </div>
+            <div class="profile-stat">
+                <div class="profile-stat-value" id="totalTransactions">0</div>
+                <div class="profile-stat-label">Transactions</div>
+            </div>
+            <div class="profile-stat">
+                <div class="profile-stat-value" id="avgTransaction">₦0</div>
+                <div class="profile-stat-label">Avg Transaction</div>
+            </div>
+            <div class="profile-stat">
+                <div class="profile-stat-value" id="customerStatus" style="display: flex; align-items: center; justify-content: center;">
+                    <span style="
+                        padding: 6px 16px;
+                        border-radius: 12px;
+                        font-size: 14px;
+                        font-weight: 600;
+                        background: #E8F5E9;
+                        color: #2E7D32;
+                    ">Active</span>
+                </div>
+                <div class="profile-stat-label">Status</div>
+            </div>
+                </div>
+    </div>
+    
+    <!-- Filters and Export -->
+    <div class="filter-bar">
+        <label style="font-weight: 600; color: var(--text-secondary);">
+            <i class="fas fa-filter"></i> Filters:
+        </label>
+        
+        <select class="filter-select" id="channelFilter">
+            <option value="">All Channels</option>
+            <option value="card">Card</option>
+            <option value="bank_transfer">Bank Transfer</option>
+            <option value="ussd">USSD</option>
+            <option value="bank">Bank</option>
+            <option value="direct_debit">Direct Debit</option>
+        </select>
+        
+        <select class="filter-select" id="bankFilter">
+            <option value="">All Payment Processors / Banks</option>
+        </select>
+        
+        <select class="filter-select" id="customerBankFilter">
+            <option value="">All Customer Banks</option>
+        </select>
+        
+        <button class="filter-select" onclick="loadTransactions()" style="background: var(--primary); color: white; cursor: pointer;">
+            Apply Filters
+        </button>
+        
+        <div class="export-buttons">
+            <a href="/export/customer/{{ customer_identifier | urlencode }}/csv" class="btn-export">
+                <i class="fas fa-file-csv"></i> CSV
+            </a>
+            <a href="/export/customer/{{ customer_identifier | urlencode }}/excel" class="btn-export">
+                <i class="fas fa-file-excel"></i> Excel
+            </a>
+            <a href="/export/customer/{{ customer_identifier | urlencode }}/pdf" class="btn-export">
+                <i class="fas fa-file-pdf"></i> PDF
+            </a>
+            </div>
+        </div>
+
+    <!-- Transactions Table -->
+    <div class="transactions-table-container">
+        <table class="transactions-table">
+                                <thead>
+                                    <tr>
+                    <th>Date & Time</th>
+                                        <th>Amount</th>
+                    <th>Reference</th>
+                                        <th>Status</th>
+                    <th>Channel</th>
+                    <th>Payment Processor</th>
+                    <th>Customer Bank</th>
+                    <th>Card Type</th>
+                    <th>Gateway Response</th>
+                                    </tr>
+                                </thead>
+            <tbody id="transactionsBody">
+                <tr>
+                    <td colspan="9" style="text-align: center; padding: 40px;">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 24px; color: var(--text-tertiary);"></i>
+                        <p style="margin-top: 12px; color: var(--text-secondary);">Loading transactions...</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const customerIdentifier = "{{ customer_identifier }}";
+
+function loadTransactions() {
+    const channel = document.getElementById('channelFilter').value;
+    const bank = document.getElementById('bankFilter').value;
+    const customerBank = document.getElementById('customerBankFilter').value;
+    
+    let url = `/api/customer/${encodeURIComponent(customerIdentifier)}/transactions?`;
+    if (channel) url += `channel=${channel}&`;
+    if (bank) url += `bank=${bank}&`;
+    if (customerBank) url += `customer_bank=${encodeURIComponent(customerBank)}&`;
+    
+    fetch(url)
+        .then(res => res.json())
+        .then(data => {
+            // Update summary
+            const summary = data.summary;
+            document.getElementById('totalRevenue').textContent = '₦' + summary.total_amount.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0});
+            document.getElementById('totalTransactions').textContent = summary.total_transactions.toLocaleString();
+            document.getElementById('avgTransaction').textContent = '₦' + summary.avg_amount.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0});
+            
+            // Update customer status based on transaction count
+            const isActive = summary.total_transactions > 1;
+            const statusEl = document.getElementById('customerStatus').querySelector('span');
+            statusEl.textContent = isActive ? 'Active' : 'New';
+            statusEl.style.background = isActive ? '#E8F5E9' : '#E3F2FD';
+            statusEl.style.color = isActive ? '#2E7D32' : '#1565C0';
+            
+            // Update customer name and avatar
+            if (data.transactions.length > 0) {
+                const firstTrans = data.transactions[0];
+                document.getElementById('customerName').textContent = firstTrans.customer_name;
+                
+                const nameParts = firstTrans.customer_name.split(' ');
+                const initials = nameParts.map(p => p[0]).join('').substring(0, 2).toUpperCase();
+                document.getElementById('profileAvatar').textContent = initials;
+            }
+            
+            // Render transactions table
+            renderTransactions(data.transactions);
+        })
+        .catch(err => {
+            console.error('Error loading transactions:', err);
+            document.getElementById('transactionsBody').innerHTML = `
+                <tr>
+                    <td colspan="9" style="text-align: center; padding: 40px; color: var(--error);">
+                        <i class="fas fa-exclamation-circle" style="font-size: 24px;"></i>
+                        <p style="margin-top: 12px;">Error loading transactions</p>
+                    </td>
+                </tr>
+            `;
+        });
+}
+
+function renderTransactions(transactions) {
+    const tbody = document.getElementById('transactionsBody');
+    
+    if (transactions.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="9" style="text-align: center; padding: 40px;">
+                    <i class="fas fa-inbox" style="font-size: 32px; color: var(--text-tertiary);"></i>
+                    <p style="margin-top: 12px; color: var(--text-secondary);">No transactions found</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = transactions.map(t => {
+        const date = new Date(t.date);
+        const formattedDate = date.toLocaleDateString('en-GB', { 
+            year: 'numeric', 
+            month: 'short', 
+            day: '2-digit' 
+        });
+        const formattedTime = date.toLocaleTimeString('en-GB', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+        
+        const channelBadge = t.channel ? `<span class="badge badge-${getBadgeClass(t.channel)}">${t.channel.replace('_', ' ')}</span>` : '-';
+        const statusBadge = t.status ? `<span class="badge badge-${getStatusBadgeClass(t.status)}">${t.status.toUpperCase()}</span>` : '-';
+        
+        return `
+            <tr>
+                <td>
+                    <div style="font-weight: 600;">${formattedDate}</div>
+                    <div style="font-size: 12px; color: var(--text-secondary);">${formattedTime}</div>
+                </td>
+                <td class="amount-cell">₦${t.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                <td style="font-family: monospace; font-size: 12px;">${t.reference || '-'}</td>
+                <td>${statusBadge}</td>
+                <td>${channelBadge}</td>
+                <td>${t.bank || '-'}</td>
+                <td>${t.customer_bank || '-'}</td>
+                <td style="font-size: 12px;">${t.card_type || '-'}</td>
+                <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px;" title="${t.gateway_response || ''}">${t.gateway_response || '-'}</td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function getBadgeClass(channel) {
+    if (channel === 'card') return 'card';
+    if (channel === 'bank_transfer') return 'transfer';
+    if (channel === 'ussd') return 'ussd';
+    return 'bank';
+}
+
+function getStatusBadgeClass(status) {
+    const statusLower = status.toLowerCase();
+    if (statusLower === 'success' || statusLower === 'successful') return 'success';
+    if (statusLower === 'failed' || statusLower === 'failure') return 'failed';
+    if (statusLower === 'pending') return 'pending';
+    return 'success'; // default to success
+}
+
+function populateFilters() {
+    // Get all transactions to populate filters
+    fetch(`/api/customer/${encodeURIComponent(customerIdentifier)}/transactions`)
+        .then(res => res.json())
+        .then(data => {
+            // Populate Payment Processors / Banks filter (from 'bank' field)
+            const processors = [...new Set(data.transactions
+                .map(t => t.bank)
+                .filter(bank => bank && bank !== '-')
+            )].sort();
+            
+            const bankSelect = document.getElementById('bankFilter');
+            processors.forEach(bank => {
+                const option = document.createElement('option');
+                option.value = bank;
+                option.textContent = bank;
+                bankSelect.appendChild(option);
+            });
+            
+            // Populate Customer Banks filter (from 'customer_bank' field)
+            const customerBanks = [...new Set(data.transactions
+                .map(t => t.customer_bank)
+                .filter(bank => bank && bank !== '-')
+            )].sort();
+            
+            const customerBankSelect = document.getElementById('customerBankFilter');
+            customerBanks.forEach(bank => {
+                const option = document.createElement('option');
+                option.value = bank;
+                option.textContent = bank;
+                customerBankSelect.appendChild(option);
+            });
+        });
+}
+
+// Load transactions and populate filters on page load
+populateFilters();
+loadTransactions();
+</script>
+{% endblock %}

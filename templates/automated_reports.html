@@ -1,0 +1,389 @@
+{% extends "base.html" %}
+
+{% block title %}Automated Reports - FinanceFlow{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-1">Automated Reports</h1>
+                    <p class="text-muted mb-0">Generate comprehensive PDF reports for different time periods</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Generation Cards -->
+    <div class="row">
+        <!-- Monthly Report -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-calendar-alt me-2"></i>Monthly Report
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Generate detailed monthly financial reports with revenue breakdown, customer analysis, and performance metrics.</p>
+                    
+                    <div class="mb-3">
+                        <label for="monthSelect" class="form-label">Select Month</label>
+                        <select id="monthSelect" class="form-select">
+                            <option value="">Current Month</option>
+                            <option value="1">January</option>
+                            <option value="2">February</option>
+                            <option value="3">March</option>
+                            <option value="4">April</option>
+                            <option value="5">May</option>
+                            <option value="6">June</option>
+                            <option value="7">July</option>
+                            <option value="8">August</option>
+                            <option value="9">September</option>
+                            <option value="10">October</option>
+                            <option value="11">November</option>
+                            <option value="12">December</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="monthYear" class="form-label">Year</label>
+                        <input type="number" id="monthYear" class="form-control" min="2020" max="2030" value="2025">
+                    </div>
+                    
+                    <button id="generateMonthly" class="btn btn-primary w-100">
+                        <i class="fas fa-file-pdf me-2"></i>Generate Monthly Report
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quarterly Report -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>Quarterly Report
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Comprehensive quarterly analysis with trend analysis, growth metrics, and strategic insights.</p>
+                    
+                    <div class="mb-3">
+                        <label for="quarterSelect" class="form-label">Select Quarter</label>
+                        <select id="quarterSelect" class="form-select">
+                            <option value="">Current Quarter</option>
+                            <option value="1">Q1 (Jan-Mar)</option>
+                            <option value="2">Q2 (Apr-Jun)</option>
+                            <option value="3">Q3 (Jul-Sep)</option>
+                            <option value="4">Q4 (Oct-Dec)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="quarterYear" class="form-label">Year</label>
+                        <input type="number" id="quarterYear" class="form-control" min="2020" max="2030" value="2025">
+                    </div>
+                    
+                    <button id="generateQuarterly" class="btn btn-success w-100">
+                        <i class="fas fa-file-pdf me-2"></i>Generate Quarterly Report
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Annual Report -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-chart-line me-2"></i>Annual Report
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Complete annual financial summary with year-over-year analysis, customer insights, and growth projections.</p>
+                    
+                    <div class="mb-3">
+                        <label for="annualYear" class="form-label">Select Year</label>
+                        <input type="number" id="annualYear" class="form-control" min="2020" max="2030" value="2025">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <small class="text-muted">Annual reports include comprehensive analysis of all 12 months.</small>
+                    </div>
+                    
+                    <button id="generateAnnual" class="btn btn-info w-100">
+                        <i class="fas fa-file-pdf me-2"></i>Generate Annual Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Preview Section -->
+    <div id="reportPreview" class="row mt-4" style="display: none;">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Report Preview</h5>
+                    <p class="text-muted mb-0" id="reportPeriod">Report for selected period</p>
+                </div>
+                <div class="card-body">
+                    <div id="reportContent">
+                        <!-- Report content will be populated here -->
+                    </div>
+                    <div class="mt-3">
+                        <button id="downloadReport" class="btn btn-primary">
+                            <i class="fas fa-download me-2"></i>Download PDF
+                        </button>
+                        <button id="emailReport" class="btn btn-outline-primary ms-2">
+                            <i class="fas fa-envelope me-2"></i>Email Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loadingState" class="text-center py-5" style="display: none;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-3 text-muted">Generating report...</p>
+    </div>
+
+    <!-- Error State -->
+    <div id="errorState" class="text-center py-5" style="display: none;">
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+            <h5>Report Generation Failed</h5>
+            <p id="errorMessage" class="mb-0">Unable to generate report. Please try again.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let currentReportData = null;
+
+function generateReport(type) {
+    const loadingState = document.getElementById('loadingState');
+    const reportPreview = document.getElementById('reportPreview');
+    const errorState = document.getElementById('errorState');
+    
+    // Show loading
+    loadingState.style.display = 'block';
+    reportPreview.style.display = 'none';
+    errorState.style.display = 'none';
+    
+    // Get parameters based on report type
+    let params = `type=${type}`;
+    
+    if (type === 'monthly') {
+        const month = document.getElementById('monthSelect').value;
+        const year = document.getElementById('monthYear').value;
+        if (month) params += `&month=${month}`;
+        if (year) params += `&year=${year}`;
+    } else if (type === 'quarterly') {
+        const quarter = document.getElementById('quarterSelect').value;
+        const year = document.getElementById('quarterYear').value;
+        if (quarter) params += `&quarter=${quarter}`;
+        if (year) params += `&year=${year}`;
+    } else if (type === 'annual') {
+        const year = document.getElementById('annualYear').value;
+        if (year) params += `&year=${year}`;
+    }
+    
+    fetch(`/api/generate-report?${params}`)
+        .then(res => res.json())
+        .then(data => {
+            loadingState.style.display = 'none';
+            
+            if (data.error) {
+                errorState.style.display = 'block';
+                document.getElementById('errorMessage').textContent = data.error;
+                return;
+            }
+            
+            currentReportData = data;
+            displayReportPreview(data);
+            reportPreview.style.display = 'block';
+        })
+        .catch(err => {
+            console.error('Error generating report:', err);
+            loadingState.style.display = 'none';
+            errorState.style.display = 'block';
+            document.getElementById('errorMessage').textContent = err.message;
+        });
+}
+
+function displayReportPreview(data) {
+    const reportPeriod = document.getElementById('reportPeriod');
+    const reportContent = document.getElementById('reportContent');
+    
+    // Set period
+    reportPeriod.textContent = `${data.type.charAt(0).toUpperCase() + data.type.slice(1)} Report - ${data.period}`;
+    
+    // Create report content
+    let content = `
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Summary</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <tr>
+                            <td><strong>Total Revenue:</strong></td>
+                            <td>₦${data.summary.total_revenue.toLocaleString()}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Total Transactions:</strong></td>
+                            <td>${data.summary.total_transactions.toLocaleString()}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Unique Customers:</strong></td>
+                            <td>${data.summary.unique_customers.toLocaleString()}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Average Transaction:</strong></td>
+                            <td>₦${data.summary.avg_transaction.toLocaleString()}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>ARPU:</strong></td>
+                            <td>₦${data.summary.arpu.toLocaleString()}</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <h6>Top Customers</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Customer</th>
+                                <th>Revenue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+    `;
+    
+    data.top_customers.slice(0, 5).forEach(customer => {
+        content += `
+            <tr>
+                <td>${customer[0]}</td>
+                <td>₦${customer[1].toLocaleString()}</td>
+            </tr>
+        `;
+    });
+    
+    content += `
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Add bank/channel breakdown if available
+    if (data.bank_breakdown) {
+        content += `
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <h6>Bank Breakdown</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Bank</th>
+                                    <th>Revenue</th>
+                                    <th>Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+        `;
+        
+        Object.entries(data.bank_breakdown).forEach(([bank, info]) => {
+            content += `
+                <tr>
+                    <td>${bank}</td>
+                    <td>₦${info.revenue.toLocaleString()}</td>
+                    <td>${info.count}</td>
+                </tr>
+            `;
+        });
+        
+        content += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+        `;
+    }
+    
+    if (data.channel_breakdown) {
+        content += `
+                <div class="col-md-6">
+                    <h6>Channel Breakdown</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Channel</th>
+                                    <th>Revenue</th>
+                                    <th>Count</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+        `;
+        
+        Object.entries(data.channel_breakdown).forEach(([channel, info]) => {
+            content += `
+                <tr>
+                    <td>${channel}</td>
+                    <td>₦${info.revenue.toLocaleString()}</td>
+                    <td>${info.count}</td>
+                </tr>
+            `;
+        });
+        
+        content += `
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+        `;
+    }
+    
+    content += `
+            </div>
+        </div>
+    `;
+    
+    reportContent.innerHTML = content;
+}
+
+// Event listeners
+document.getElementById('generateMonthly').addEventListener('click', () => generateReport('monthly'));
+document.getElementById('generateQuarterly').addEventListener('click', () => generateReport('quarterly'));
+document.getElementById('generateAnnual').addEventListener('click', () => generateReport('annual'));
+
+document.getElementById('downloadReport').addEventListener('click', () => {
+    if (currentReportData) {
+        // In a real implementation, this would generate and download a PDF
+        alert('PDF download functionality would be implemented here. Report data is ready for PDF generation.');
+    }
+});
+
+document.getElementById('emailReport').addEventListener('click', () => {
+    if (currentReportData) {
+        // In a real implementation, this would send an email with the report
+        alert('Email functionality would be implemented here. Report data is ready for email delivery.');
+    }
+});
+</script>
+{% endblock %}
+

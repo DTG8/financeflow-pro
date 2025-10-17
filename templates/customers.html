@@ -1,0 +1,1405 @@
+{% extends "base.html" %}
+
+{% block title %}Customers - FinanceFlow Pro{% endblock %}
+
+{% block head %}
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+{% endblock %}
+
+{% block extra_styles %}
+    <style>
+    .customer-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 20px;
+    }
+    
+    /* Responsive grid adjustments */
+    @media (min-width: 1200px) {
+        .customer-grid {
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .customer-grid {
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 16px;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .customer-grid {
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+        
+        .customer-item {
+            padding: 16px;
+        }
+        
+        .customer-avatar {
+            width: 48px;
+            height: 48px;
+            font-size: 16px;
+            margin-right: 12px;
+        }
+        
+        .tier-icon {
+            width: 18px;
+            height: 18px;
+            font-size: 9px;
+        }
+        
+        .tier-icon i {
+            font-size: 9px;
+        }
+    }
+    
+    .filter-bar {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+        background: var(--bg-primary);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        padding: 16px;
+        margin-bottom: 16px;
+    }
+    
+    .filter-input {
+        padding: 8px 12px;
+        border: 1px solid var(--border);
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        border-radius: var(--radius);
+        font-size: 14px;
+    }
+    
+    .customer-item {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        padding: 20px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        opacity: 0;
+        transform: translateY(20px);
+        animation: cardFadeIn 0.6s ease forwards;
+    }
+    
+    @keyframes cardFadeIn {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .customer-item:nth-child(1) { animation-delay: 0.1s; }
+    .customer-item:nth-child(2) { animation-delay: 0.2s; }
+    .customer-item:nth-child(3) { animation-delay: 0.3s; }
+    .customer-item:nth-child(4) { animation-delay: 0.4s; }
+    .customer-item:nth-child(5) { animation-delay: 0.5s; }
+    .customer-item:nth-child(6) { animation-delay: 0.6s; }
+    .customer-item:nth-child(7) { animation-delay: 0.7s; }
+    .customer-item:nth-child(8) { animation-delay: 0.8s; }
+    .customer-item:nth-child(9) { animation-delay: 0.9s; }
+    .customer-item:nth-child(10) { animation-delay: 1.0s; }
+    
+    .customer-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--primary), var(--info));
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .customer-item:hover::before {
+        opacity: 1;
+    }
+    
+    /* Revenue Tier Styling */
+    .customer-item.tier-premium {
+        background: linear-gradient(135deg, #fff 0%, #f8f9ff 100%) !important;
+        border-color: #1a73e8 !important;
+        border-width: 2px !important;
+        box-shadow: 0 4px 20px rgba(26, 115, 232, 0.2) !important;
+    }
+    
+    .customer-item.tier-premium::before {
+        background: linear-gradient(90deg, #1a73e8, #4285f4) !important;
+        opacity: 1 !important;
+        height: 6px !important;
+    }
+    
+    .customer-item.tier-high {
+        background: linear-gradient(135deg, #fff 0%, #f3e8ff 100%) !important;
+        border-color: #8a2be2 !important;
+        border-width: 2px !important;
+        box-shadow: 0 4px 20px rgba(138, 43, 226, 0.2) !important;
+    }
+    
+    .customer-item.tier-high::before {
+        background: linear-gradient(90deg, #8a2be2, #9c27b0) !important;
+        opacity: 1 !important;
+        height: 6px !important;
+    }
+    
+    .customer-item.tier-medium {
+        background: linear-gradient(135deg, #fff 0%, #e8f5e8 100%) !important;
+        border-color: #0f9d58 !important;
+        border-width: 2px !important;
+        box-shadow: 0 4px 20px rgba(15, 157, 88, 0.2) !important;
+    }
+    
+    .customer-item.tier-medium::before {
+        background: linear-gradient(90deg, #0f9d58, #4caf50) !important;
+        opacity: 1 !important;
+        height: 6px !important;
+    }
+    
+    .customer-item.tier-basic {
+        background: linear-gradient(135deg, #fff 0%, #fff8e1 100%) !important;
+        border-color: #f9ab00 !important;
+        border-width: 2px !important;
+        box-shadow: 0 4px 20px rgba(249, 171, 0, 0.2) !important;
+    }
+    
+    .customer-item.tier-basic::before {
+        background: linear-gradient(90deg, #f9ab00, #ffc107) !important;
+        opacity: 1 !important;
+        height: 6px !important;
+    }
+    
+    .customer-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 16px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid var(--border-light);
+    }
+    
+    .customer-avatar {
+        width: 56px;
+        height: 56px;
+        background: linear-gradient(135deg, var(--primary), var(--info));
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        font-size: 20px;
+        margin-right: 16px;
+        position: relative;
+        box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+        transition: all 0.3s ease;
+    }
+    
+    .customer-avatar::after {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: linear-gradient(135deg, var(--primary), var(--info));
+        border-radius: 50%;
+        z-index: -1;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .customer-item:hover .customer-avatar::after {
+        opacity: 1;
+    }
+    
+    /* Avatar color variations based on customer tier */
+    .customer-avatar.tier-premium {
+        background: linear-gradient(135deg, #1a73e8, #4285f4);
+        box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+    }
+    
+    .customer-avatar.tier-high {
+        background: linear-gradient(135deg, #8a2be2, #9c27b0);
+        box-shadow: 0 4px 12px rgba(138, 43, 226, 0.3);
+    }
+    
+    .customer-avatar.tier-medium {
+        background: linear-gradient(135deg, #0f9d58, #4caf50);
+        box-shadow: 0 4px 12px rgba(15, 157, 88, 0.3);
+    }
+    
+    .customer-avatar.tier-basic {
+        background: linear-gradient(135deg, #f9ab00, #ffc107);
+        box-shadow: 0 4px 12px rgba(249, 171, 0, 0.3);
+    }
+    
+    .customer-info h6 {
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 2px;
+    }
+    
+    .customer-info small {
+        color: var(--text-tertiary);
+        font-size: 12px;
+    }
+    
+    .customer-stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+    }
+    
+    .stat-item {
+        text-align: center;
+        padding: 12px;
+        background: var(--bg-secondary);
+        border-radius: var(--radius);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        z-index: 2;
+    }
+    
+    .stat-item-value {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 2px;
+    }
+    
+    .stat-item-label {
+        font-size: 11px;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    /* Enhanced Status Badges */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .status-badge::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transition: left 0.5s ease;
+    }
+    
+    .status-badge:hover::before {
+        left: 100%;
+    }
+    
+    .status-badge.active {
+        background: linear-gradient(135deg, #e8f5e8, #c8e6c9);
+        color: #2e7d32;
+        border: 1px solid #a5d6a7;
+        box-shadow: 0 2px 8px rgba(46, 125, 50, 0.2);
+    }
+    
+    .status-badge.new {
+        background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+        color: #1565c0;
+        border: 1px solid #90caf9;
+        box-shadow: 0 2px 8px rgba(21, 101, 192, 0.2);
+    }
+    
+    .status-badge.premium {
+        background: linear-gradient(135deg, #f3e5f5, #e1bee7);
+        color: #7b1fa2;
+        border: 1px solid #ce93d8;
+        box-shadow: 0 2px 8px rgba(123, 31, 162, 0.2);
+    }
+    
+    .status-badge.vip {
+        background: linear-gradient(135deg, #fff3e0, #ffcc02);
+        color: #e65100;
+        border: 1px solid #ffb74d;
+        box-shadow: 0 2px 8px rgba(230, 81, 0, 0.2);
+    }
+    
+    /* Enhanced Card Interactivity */
+    .customer-item {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .customer-item::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+        transition: left 0.6s ease;
+        z-index: 1;
+    }
+    
+    .customer-item:hover::after {
+        left: 100%;
+    }
+    
+    .customer-item:hover {
+        transform: translateY(-6px) scale(1.02);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+    }
+    
+    .customer-item:hover .customer-avatar {
+        transform: scale(1.15);
+        box-shadow: 0 8px 25px rgba(26, 115, 232, 0.4);
+    }
+    
+    .customer-item:hover .tier-icon {
+        transform: scale(1.4) rotate(10deg);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+    
+    .customer-item:hover .stat-item {
+        transform: translateY(-2px);
+        background: rgba(255,255,255,0.8);
+    }
+    
+    .customer-item:hover .status-badge {
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    
+    /* Revenue Tier Icons */
+    .tier-icon {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        color: white;
+        font-weight: 700;
+        z-index: 10;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    
+    .tier-icon i {
+        font-size: 10px;
+    }
+    
+    .tier-icon.premium {
+        background: linear-gradient(135deg, #1a73e8, #4285f4);
+    }
+    
+    .tier-icon.high {
+        background: linear-gradient(135deg, #8a2be2, #9c27b0);
+    }
+    
+    .tier-icon.medium {
+        background: linear-gradient(135deg, #0f9d58, #4caf50);
+    }
+    
+    .tier-icon.basic {
+        background: linear-gradient(135deg, #f9ab00, #ffc107);
+    }
+    
+    .tier-icon {
+        transition: all 0.3s ease;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-secondary);
+    }
+    
+    .empty-state i {
+        font-size: 64px;
+        color: var(--gray-300);
+        margin-bottom: 16px;
+        }
+
+    /* Analytics Tabs */
+    .analytics-tabs {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        padding: 0;
+        overflow: hidden;
+    }
+
+    .tab-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0;
+    }
+
+    .tab-btn {
+        flex: 1;
+        padding: 16px 20px;
+        background: transparent;
+        border: none;
+        color: var(--text-secondary);
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        border-bottom: 3px solid transparent;
+        min-width: 150px;
+    }
+
+    .tab-btn:hover {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+    }
+
+    .tab-btn.active {
+        background: var(--bg-secondary);
+        color: var(--primary);
+        border-bottom-color: var(--primary);
+    }
+
+    /* Tab Content */
+    .tab-content {
+        display: none;
+        padding: 24px;
+        min-height: 400px;
+        background: #ffffff;
+        border-radius: 8px;
+        margin-top: 16px;
+        border: 2px solid #e0e0e0;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .tab-content.active {
+        display: block !important;
+    }
+
+    /* Analytics Cards */
+    .analytics-card {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .analytics-card h6 {
+        color: var(--text-primary);
+        font-weight: 600;
+        margin-bottom: 16px;
+    }
+    
+    /* Detail Cards */
+    .detail-card {
+        background: #f8f9fa;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 16px;
+        height: 100%;
+    }
+    
+    .detail-card h6 {
+        color: #495057;
+        font-weight: 600;
+        margin-bottom: 12px;
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 8px;
+    }
+    
+    .detail-card p {
+        margin-bottom: 8px;
+        font-size: 14px;
+    }
+    
+    .customer-list {
+        border: 1px solid #e9ecef;
+        border-radius: 4px;
+        padding: 8px;
+        background: white;
+    }
+    
+    .customer-item {
+        border-bottom: 1px solid #f1f3f4;
+        padding: 4px 0;
+    }
+    
+    .customer-item:last-child {
+        border-bottom: none;
+    }
+    
+    .customer-name {
+        font-weight: 500;
+        color: #495057;
+        font-size: 13px;
+    }
+    
+    .customer-clv, .customer-recency, .customer-frequency {
+        font-weight: 600;
+        color: #007bff;
+        font-size: 12px;
+    }
+
+    .metric-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 20px;
+    }
+
+    .metric-item {
+        text-align: center;
+        padding: 16px;
+        background: var(--bg-secondary);
+        border-radius: var(--radius);
+    }
+
+    .metric-value {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--primary);
+        margin-bottom: 4px;
+    }
+
+    .metric-label {
+        font-size: 12px;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .metric-change {
+        font-size: 11px;
+        margin-top: 4px;
+    }
+
+    .metric-change.positive {
+        color: var(--success);
+    }
+
+    .metric-change.negative {
+        color: var(--danger);
+    }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1 class="page-title">Customer Analytics</h1>
+        <p class="page-subtitle">Comprehensive insights into customer behavior, CLV, segmentation, and retention</p>
+        </div>
+
+    <!-- Advanced Analytics Tabs -->
+    <div class="analytics-tabs mb-4">
+        <div class="tab-buttons">
+            <button class="tab-btn active" onclick="switchTab('overview')">
+                <i class="fas fa-users me-2"></i>Customer Overview
+            </button>
+            <button class="tab-btn" onclick="switchTab('segmentation')">
+                <i class="fas fa-chart-pie me-2"></i>Segmentation
+            </button>
+            <button class="tab-btn" onclick="switchTab('clv')">
+                <i class="fas fa-dollar-sign me-2"></i>CLV Analysis
+            </button>
+            <button class="tab-btn" onclick="switchTab('retention')">
+                <i class="fas fa-heart me-2"></i>Retention & Churn
+            </button>
+            <button class="tab-btn" onclick="switchTab('behavior')">
+                <i class="fas fa-chart-line me-2"></i>Behavior Patterns
+            </button>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-bar">
+        <input id="customerSearch" class="filter-input" type="text" placeholder="Search name or email" style="min-width: 260px;" />
+        <input id="minTransactions" class="filter-input" type="number" min="0" placeholder="Min transactions" style="width: 160px;" />
+        <input id="minRevenue" class="filter-input" type="number" min="0" placeholder="Min revenue (₦)" style="width: 180px;" />
+        <select id="bankFilter" class="filter-input" style="width: 200px;">
+            <option value="">All Payment Processors</option>
+        </select>
+        <select id="fileFilter" class="filter-input" style="width: 200px;">
+            <option value="">All Statements</option>
+                </select>
+        <select id="statusFilter" class="filter-input" style="width: 160px;">
+            <option value="">All statuses</option>
+            <option value="active">Active</option>
+            <option value="new">New</option>
+                </select>
+        <button class="btn-primary-clean" type="button" onclick="applyCustomerFilters()">Apply Filters</button>
+        <button class="btn-danger-clean" type="button" onclick="resetCustomerFilters()">Reset</button>
+        </div>
+
+    <!-- Tab Content -->
+    <div class="tab-content active" id="overview">
+        <!-- Customers Grid -->
+        <div class="customer-grid" id="customersGrid">
+            <!-- Populated by JavaScript -->
+        </div>
+    </div>
+
+    <div class="tab-content" id="segmentation">
+        <div class="analytics-card">
+            <h6>Customer Segmentation Analysis</h6>
+            <div class="metric-grid" id="segmentationMetrics">
+                <p>Loading segmentation data...</p>
+            </div>
+                <div style="position: relative; height: 400px; width: 100%;">
+                    <canvas id="segmentationChart"></canvas>
+                </div>
+        </div>
+    </div>
+
+    <div class="tab-content" id="clv">
+        <div class="analytics-card">
+            <h6>Customer Lifetime Value (CLV) Analysis</h6>
+            <div class="metric-grid" id="clvMetrics">
+                <p>Loading CLV data...</p>
+            </div>
+            <div style="position: relative; height: 400px; width: 100%;">
+                <canvas id="clvChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-content" id="retention">
+        <div class="analytics-card">
+            <h6>Customer Retention & Churn Analysis</h6>
+            <div class="metric-grid" id="retentionMetrics">
+                <p>Loading retention data...</p>
+            </div>
+            <div style="position: relative; height: 400px; width: 100%;">
+                <canvas id="retentionChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-content" id="behavior">
+        <div class="analytics-card">
+            <h6>Customer Behavior Patterns</h6>
+            <div class="metric-grid" id="behaviorMetrics">
+                <p>Loading behavior data...</p>
+            </div>
+            <div style="position: relative; height: 400px; width: 100%;">
+                <canvas id="behaviorChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" id="emptyState" style="display: none;">
+        <i class="fas fa-users"></i>
+        <h5>No Customer Data</h5>
+        <p>Upload bank statements to see customer analytics</p>
+        <a href="/" class="btn-primary-clean mt-3">
+            <i class="fas fa-upload me-2"></i>Upload Statement
+        </a>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+    <script>
+        // Version: 2024-01-15-001 - Fixed chart destroy errors
+        console.log('Customer Analytics Script Loaded - Version 2024-01-15-001');
+        let allCustomers = [];
+        let availableBanks = [];
+        let availableFiles = [];
+        let customerAnalytics = null;
+
+function loadCustomers() {
+    const bankFilter = document.getElementById('bankFilter').value;
+    const fileFilter = document.getElementById('fileFilter').value;
+    
+    let url = '/api/customers?';
+    if (bankFilter) url += `bank=${encodeURIComponent(bankFilter)}&`;
+    if (fileFilter) url += `file=${encodeURIComponent(fileFilter)}&`;
+    
+    fetch(url)
+        .then(res => res.json())
+        .then(data => {
+            if (data.customers.length === 0) {
+                document.getElementById('emptyState').style.display = 'block';
+                document.getElementById('customersGrid').innerHTML = '';
+                return;
+            }
+            document.getElementById('emptyState').style.display = 'none';
+            allCustomers = data.customers;
+            availableBanks = data.available_banks;
+            availableFiles = data.available_files;
+            
+            // Populate filter dropdowns
+            populateFilterDropdowns();
+            
+            // Apply local filters on the loaded data
+            filterCustomersLocally();
+            
+            // Load advanced analytics
+            console.log('Loading customer analytics...');
+            loadCustomerAnalytics();
+        })
+        .catch(err => {
+            document.getElementById('emptyState').style.display = 'block';
+        });
+}
+
+function loadCustomerAnalytics() {
+    console.log('Loading customer analytics...');
+    fetch('/api/customer-analytics')
+        .then(res => {
+            console.log('Response status:', res.status);
+            return res.json();
+        })
+        .then(data => {
+            console.log('Customer analytics data:', data);
+            customerAnalytics = data;
+            updateAnalyticsTabs();
+        })
+        .catch(err => {
+            console.error('Error loading customer analytics:', err);
+        });
+}
+
+function updateAnalyticsTabs() {
+    console.log('Updating analytics tabs...');
+    if (!customerAnalytics) {
+        console.log('No customer analytics data available');
+        return;
+    }
+    
+    console.log('Customer analytics data available:', customerAnalytics);
+    console.log('Segment analysis available:', customerAnalytics.segment_analysis);
+    
+    // Update segmentation tab
+    console.log('Updating segmentation tab...');
+    updateSegmentationTab();
+    
+    // Update CLV tab
+    console.log('Updating CLV tab...');
+    updateCLVTab();
+    
+    // Update retention tab
+    console.log('Updating retention tab...');
+    updateRetentionTab();
+    
+    // Update behavior tab
+    console.log('Updating behavior tab...');
+    updateBehaviorTab();
+}
+
+function updateSegmentationTab() {
+    console.log('Updating segmentation tab...');
+    const metricsContainer = document.getElementById('segmentationMetrics');
+    console.log('Metrics container found:', metricsContainer);
+    
+    if (!customerAnalytics) {
+        console.log('No customer analytics data available');
+        metricsContainer.innerHTML = '<p>No customer analytics data available</p>';
+        return;
+    }
+    
+    const segmentAnalysis = customerAnalytics.segment_analysis;
+    console.log('Segment analysis:', segmentAnalysis);
+    console.log('Segment analysis keys:', Object.keys(segmentAnalysis));
+    
+    if (!segmentAnalysis || Object.keys(segmentAnalysis).length === 0) {
+        console.log('No segment analysis data available');
+        metricsContainer.innerHTML = '<p>No segmentation data available</p>';
+        return;
+    }
+    
+    let metricsHTML = '';
+    Object.entries(segmentAnalysis).forEach(([segment, data]) => {
+        console.log('Processing segment:', segment, data);
+        metricsHTML += `
+            <div class="metric-item">
+                <div class="metric-value">${data.customer_count}</div>
+                <div class="metric-label">${segment}</div>
+                <div class="metric-change">${data.revenue_share.toFixed(1)}% revenue</div>
+            </div>
+        `;
+    });
+    
+    console.log('Generated metrics HTML:', metricsHTML);
+    metricsContainer.innerHTML = metricsHTML;
+    
+    // Create segmentation chart
+    createSegmentationChart(segmentAnalysis);
+}
+
+function updateCLVTab() {
+    console.log('Updating CLV tab...');
+    const metricsContainer = document.getElementById('clvMetrics');
+    console.log('CLV metrics container found:', metricsContainer);
+    
+    if (!customerAnalytics) {
+        console.log('No customer analytics data available for CLV');
+        metricsContainer.innerHTML = '<p>No customer analytics data available</p>';
+        return;
+    }
+    
+    const arpu = customerAnalytics.arpu_analysis;
+    console.log('ARPU analysis:', arpu);
+    
+    if (!arpu) {
+        console.log('No ARPU analysis data available');
+        metricsContainer.innerHTML = '<p>No CLV data available</p>';
+        return;
+    }
+    
+    const metricsHTML = `
+        <div class="metric-item">
+            <div class="metric-value">₦${arpu.arpu.toLocaleString()}</div>
+            <div class="metric-label">Average ARPU</div>
+        </div>
+        <div class="metric-item">
+            <div class="metric-value">₦${arpu.revenue_distribution.median.toLocaleString()}</div>
+            <div class="metric-label">Median CLV</div>
+        </div>
+        <div class="metric-item">
+            <div class="metric-value">₦${arpu.revenue_distribution.q75.toLocaleString()}</div>
+            <div class="metric-label">75th Percentile</div>
+        </div>
+        <div class="metric-item">
+            <div class="metric-value">${arpu.total_customers}</div>
+            <div class="metric-label">Total Customers</div>
+        </div>
+    `;
+    
+    metricsContainer.innerHTML = metricsHTML;
+    
+    // Create CLV chart
+    createCLVChart(customerAnalytics.customer_metrics);
+}
+
+function updateRetentionTab() {
+    console.log('Updating retention tab...');
+    const metricsContainer = document.getElementById('retentionMetrics');
+    console.log('Retention metrics container found:', metricsContainer);
+    
+    if (!customerAnalytics) {
+        console.log('No customer analytics data available for retention');
+        metricsContainer.innerHTML = '<p>No customer analytics data available</p>';
+        return;
+    }
+    
+    // Calculate retention metrics
+    const totalCustomers = Object.keys(customerAnalytics.customer_metrics).length;
+    const activeCustomers = Object.values(customerAnalytics.customer_metrics).filter(c => c.recency < 30).length;
+    const churnedCustomers = Object.values(customerAnalytics.customer_metrics).filter(c => c.recency > 90).length;
+    const retentionRate = (activeCustomers / totalCustomers * 100).toFixed(1);
+    
+    const metricsHTML = `
+        <div class="metric-item">
+            <div class="metric-value">${retentionRate}%</div>
+            <div class="metric-label">Retention Rate</div>
+        </div>
+        <div class="metric-item">
+            <div class="metric-value">${activeCustomers}</div>
+            <div class="metric-label">Active Customers</div>
+        </div>
+        <div class="metric-item">
+            <div class="metric-value">${churnedCustomers}</div>
+            <div class="metric-label">Churned Customers</div>
+        </div>
+        <div class="metric-item">
+            <div class="metric-value">${totalCustomers - activeCustomers - churnedCustomers}</div>
+            <div class="metric-label">At Risk</div>
+        </div>
+    `;
+    
+    metricsContainer.innerHTML = metricsHTML;
+    
+    // Create retention chart
+    createRetentionChart(customerAnalytics.customer_metrics);
+}
+
+function updateBehaviorTab() {
+    console.log('Updating behavior tab...');
+    const metricsContainer = document.getElementById('behaviorMetrics');
+    console.log('Behavior metrics container found:', metricsContainer);
+    
+    if (!customerAnalytics) {
+        console.log('No customer analytics data available for behavior');
+        metricsContainer.innerHTML = '<p>No customer analytics data available</p>';
+        return;
+    }
+    
+    // Calculate behavior metrics
+    const customers = Object.values(customerAnalytics.customer_metrics);
+    const avgFrequency = customers.reduce((sum, c) => sum + c.transaction_frequency, 0) / customers.length;
+    const avgRecency = customers.reduce((sum, c) => sum + c.recency, 0) / customers.length;
+    const highValueCustomers = customers.filter(c => c.clv > 100000).length;
+    
+    const metricsHTML = `
+        <div class="metric-item">
+            <div class="metric-value">${avgFrequency.toFixed(1)}</div>
+            <div class="metric-label">Avg Frequency/Month</div>
+        </div>
+        <div class="metric-item">
+            <div class="metric-value">${avgRecency.toFixed(0)}</div>
+            <div class="metric-label">Avg Days Since Last TX</div>
+        </div>
+        <div class="metric-item">
+            <div class="metric-value">${highValueCustomers}</div>
+            <div class="metric-label">High Value Customers</div>
+        </div>
+        <div class="metric-item">
+            <div class="metric-value">${customers.length}</div>
+            <div class="metric-label">Total Analyzed</div>
+        </div>
+    `;
+    
+    metricsContainer.innerHTML = metricsHTML;
+    
+    // Create behavior chart
+    createBehaviorChart(customerAnalytics.customer_metrics);
+}
+
+function createSegmentationChart(segmentAnalysis) {
+    console.log('Creating segmentation chart...');
+    const ctx = document.getElementById('segmentationChart');
+    console.log('Chart canvas found:', ctx);
+    
+    if (!ctx) {
+        console.error('Segmentation chart canvas not found');
+        return;
+    }
+    
+    const context = ctx.getContext('2d');
+    
+    if (window.segmentationChart && typeof window.segmentationChart.destroy === 'function') {
+        console.log('Destroying existing chart...');
+        window.segmentationChart.destroy();
+    } else {
+        console.log('No existing chart to destroy or destroy method not available');
+    }
+    
+    const segments = Object.keys(segmentAnalysis);
+    const revenues = segments.map(s => segmentAnalysis[s].total_revenue);
+    const customers = segments.map(s => segmentAnalysis[s].customer_count);
+    
+    console.log('Chart data:', { segments, revenues, customers });
+    
+    try {
+        window.segmentationChart = new Chart(context, {
+            type: 'doughnut',
+            data: {
+                labels: segments,
+                datasets: [{
+                    data: revenues,
+                    backgroundColor: [
+                        '#1A73E8', '#0F9D58', '#F9AB00', '#EA4335', 
+                        '#4285F4', '#9C27B0', '#FF9800', '#795548'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+            aspectRatio: 2,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const segment = context.label;
+                                const data = segmentAnalysis[segment];
+                                return `${segment}: ₦${context.parsed.toLocaleString()} (${data.customer_count} customers)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        console.log('Segmentation chart created successfully');
+    } catch (error) {
+        console.error('Error creating segmentation chart:', error);
+    }
+    
+    console.log('Segmentation chart creation completed');
+}
+
+function createCLVChart(customerMetrics) {
+    const ctx = document.getElementById('clvChart').getContext('2d');
+    
+    if (window.clvChart && typeof window.clvChart.destroy === 'function') {
+        window.clvChart.destroy();
+    }
+    
+    const clvValues = Object.values(customerMetrics).map(c => c.clv);
+    const clvRanges = [
+        { label: '0-50K', count: clvValues.filter(v => v < 50000).length },
+        { label: '50K-100K', count: clvValues.filter(v => v >= 50000 && v < 100000).length },
+        { label: '100K-250K', count: clvValues.filter(v => v >= 100000 && v < 250000).length },
+        { label: '250K-500K', count: clvValues.filter(v => v >= 250000 && v < 500000).length },
+        { label: '500K+', count: clvValues.filter(v => v >= 500000).length }
+    ];
+    
+    window.clvChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: clvRanges.map(r => r.label),
+            datasets: [{
+                label: 'Number of Customers',
+                data: clvRanges.map(r => r.count),
+                backgroundColor: '#1A73E8',
+                borderColor: '#1A73E8',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            aspectRatio: 2,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+function createRetentionChart(customerMetrics) {
+    const ctx = document.getElementById('retentionChart').getContext('2d');
+    
+    if (window.retentionChart && typeof window.retentionChart.destroy === 'function') {
+        window.retentionChart.destroy();
+    }
+    
+    const customers = Object.values(customerMetrics);
+    const retentionRanges = [
+        { label: 'Active (0-30 days)', count: customers.filter(c => c.recency <= 30).length },
+        { label: 'At Risk (31-90 days)', count: customers.filter(c => c.recency > 30 && c.recency <= 90).length },
+        { label: 'Churned (90+ days)', count: customers.filter(c => c.recency > 90).length }
+    ];
+    
+    window.retentionChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: retentionRanges.map(r => r.label),
+            datasets: [{
+                data: retentionRanges.map(r => r.count),
+                backgroundColor: ['#0F9D58', '#F9AB00', '#EA4335']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            aspectRatio: 2,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+function createBehaviorChart(customerMetrics) {
+    const ctx = document.getElementById('behaviorChart').getContext('2d');
+    
+    if (window.behaviorChart && typeof window.behaviorChart.destroy === 'function') {
+        window.behaviorChart.destroy();
+    }
+    
+    const customers = Object.values(customerMetrics);
+    const frequencyRanges = [
+        { label: '0-1/month', count: customers.filter(c => c.transaction_frequency <= 1).length },
+        { label: '1-2/month', count: customers.filter(c => c.transaction_frequency > 1 && c.transaction_frequency <= 2).length },
+        { label: '2-4/month', count: customers.filter(c => c.transaction_frequency > 2 && c.transaction_frequency <= 4).length },
+        { label: '4+/month', count: customers.filter(c => c.transaction_frequency > 4).length }
+    ];
+    
+    window.behaviorChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: frequencyRanges.map(r => r.label),
+            datasets: [{
+                label: 'Number of Customers',
+                data: frequencyRanges.map(r => r.count),
+                backgroundColor: '#4285F4',
+                borderColor: '#4285F4',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            aspectRatio: 2,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+function switchTab(tabName) {
+    console.log('Switching to tab:', tabName);
+    
+    // Hide all tab contents
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+        console.log('Hiding tab:', tab.id);
+    });
+    
+    // Remove active class from all buttons
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Show selected tab content
+    const targetTab = document.getElementById(tabName);
+    if (targetTab) {
+        targetTab.classList.add('active');
+        console.log('Tab activated:', tabName);
+        console.log('Target tab element:', targetTab);
+        
+        // If switching to analytics tabs, make sure data is loaded
+        if (['segmentation', 'clv', 'retention', 'behavior'].includes(tabName)) {
+            console.log('Analytics tab selected, checking data...');
+            if (!customerAnalytics) {
+                console.log('No analytics data, loading...');
+                loadCustomerAnalytics();
+            } else {
+                console.log('Analytics data available, updating tabs...');
+                updateAnalyticsTabs();
+            }
+        }
+    } else {
+        console.error('Tab not found:', tabName);
+    }
+    
+    // Add active class to clicked button
+    if (event && event.target) {
+        event.target.classList.add('active');
+    }
+}
+
+function populateFilterDropdowns() {
+    const bankFilter = document.getElementById('bankFilter');
+    const fileFilter = document.getElementById('fileFilter');
+    
+    const currentBank = bankFilter.value;
+    const currentFile = fileFilter.value;
+    
+    // Populate banks
+    bankFilter.innerHTML = '<option value="">All Payment Processors</option>';
+    availableBanks.forEach(bank => {
+        const option = document.createElement('option');
+        option.value = bank;
+        option.textContent = bank;
+        if (bank === currentBank) option.selected = true;
+        bankFilter.appendChild(option);
+    });
+    
+    // Populate files
+    fileFilter.innerHTML = '<option value="">All Statements</option>';
+    availableFiles.forEach(file => {
+        const option = document.createElement('option');
+        option.value = file;
+        option.textContent = file;
+        if (file === currentFile) option.selected = true;
+        fileFilter.appendChild(option);
+    });
+}
+
+function renderCustomers(customers) {
+    const grid = document.getElementById('customersGrid');
+    grid.innerHTML = customers.map(customer => {
+        const initials = customer.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+        const avgAmount = customer.avg_amount || 0;
+        const isActive = customer.transaction_count > 1;
+        
+        // Determine customer tier based on revenue
+        const totalAmount = customer.total_amount || 0;
+        let tier = 'basic';
+        let tierIcon = '<i class="fas fa-star"></i>';
+        let statusClass = isActive ? 'active' : 'new';
+        let statusText = isActive ? 'Active' : 'New';
+        
+        if (totalAmount >= 1000000) {
+            tier = 'premium';
+            tierIcon = '<i class="fas fa-crown"></i>';
+            statusClass = 'premium';
+            statusText = 'Premium';
+        } else if (totalAmount >= 500000) {
+            tier = 'high';
+            tierIcon = '<i class="fas fa-gem"></i>';
+            statusClass = 'vip';
+            statusText = 'VIP';
+        } else if (totalAmount >= 100000) {
+            tier = 'medium';
+            tierIcon = '<i class="fas fa-star"></i>';
+        }
+        
+        // Activity level is now represented through card interactivity
+        
+        return `
+            <div class="customer-item tier-${tier}" onclick="window.location.href='/customer/${encodeURIComponent(customer.email || customer.name)}'">
+                <div class="tier-icon ${tier}">${tierIcon}</div>
+                
+                <div class="customer-header">
+                    <div class="customer-avatar tier-${tier}">${initials}</div>
+                    <div class="customer-info">
+                        <h6>${customer.name}</h6>
+                        <small>${customer.email || 'No email'}</small>
+                    </div>
+                </div>
+                
+                <div class="customer-stats">
+                    <div class="stat-item">
+                        <div class="stat-item-value">₦${customer.total_amount.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</div>
+                        <div class="stat-item-label">Total Revenue</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-item-value">${customer.transaction_count}</div>
+                        <div class="stat-item-label">Transactions</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-item-value">₦${avgAmount.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</div>
+                        <div class="stat-item-label">Avg Transaction</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-item-value">
+                            <span class="status-badge ${statusClass}">
+                                ${statusText}
+                            </span>
+                        </div>
+                        <div class="stat-item-label">Status</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function applyCustomerFilters() {
+    // Check if bank or file filters are active
+    const bankFilter = document.getElementById('bankFilter').value;
+    const fileFilter = document.getElementById('fileFilter').value;
+    
+    if (bankFilter || fileFilter) {
+        // Reload customers from API with bank and file filters
+        loadCustomers();
+    } else {
+        // Apply local filters if no bank/file filter
+        filterCustomersLocally();
+    }
+}
+
+function filterCustomersLocally() {
+    const q = (document.getElementById('customerSearch').value || '').toLowerCase().trim();
+    const minTx = parseInt(document.getElementById('minTransactions').value || '0', 10);
+    const minRev = parseFloat(document.getElementById('minRevenue').value || '0');
+    const status = document.getElementById('statusFilter').value; // '' | 'active' | 'new'
+    
+    const filtered = allCustomers.filter(c => {
+        const matchesQuery = !q ||
+            (c.name && c.name.toLowerCase().includes(q)) ||
+            (c.email && c.email.toLowerCase().includes(q));
+        const matchesMinTx = (c.transaction_count || 0) >= minTx;
+        const matchesMinRev = (c.total_amount || 0) >= minRev;
+        const isActive = (c.transaction_count || 0) > 1;
+        const matchesStatus = !status || (status === 'active' ? isActive : !isActive);
+        return matchesQuery && matchesMinTx && matchesMinRev && matchesStatus;
+    });
+    
+    renderCustomers(filtered);
+    document.getElementById('emptyState').style.display = filtered.length ? 'none' : 'block';
+}
+
+function resetCustomerFilters() {
+    document.getElementById('customerSearch').value = '';
+    document.getElementById('minTransactions').value = '';
+    document.getElementById('minRevenue').value = '';
+    document.getElementById('bankFilter').value = '';
+    document.getElementById('fileFilter').value = '';
+    document.getElementById('statusFilter').value = '';
+    renderCustomers(allCustomers);
+    document.getElementById('emptyState').style.display = 'none';
+}
+
+// Live search as user types
+document.addEventListener('input', (e) => {
+    if (e.target && (e.target.id === 'customerSearch')) {
+        applyCustomerFilters();
+    }
+});
+
+window.addEventListener('load', function() {
+    console.log('=== PAGE LOADED, INITIALIZING ===');
+    
+    // Test if tabs are working
+    console.log('Testing tab functionality...');
+    const testTab = document.getElementById('segmentation');
+    if (testTab) {
+        console.log('✅ Segmentation tab found:', testTab);
+    } else {
+        console.error('❌ Segmentation tab not found');
+    }
+    
+    // Test if analytics data loads
+    console.log('Testing analytics data loading...');
+    fetch('/api/customer-analytics')
+        .then(res => {
+            console.log('Response status:', res.status);
+            return res.json();
+        })
+        .then(data => {
+            console.log('✅ Analytics data loaded successfully:', data);
+            customerAnalytics = data;
+            console.log('✅ Customer analytics set:', customerAnalytics);
+            console.log('✅ Calling updateAnalyticsTabs...');
+            updateAnalyticsTabs();
+        })
+        .catch(err => {
+            console.error('❌ Error loading analytics data:', err);
+        });
+    
+    console.log('Loading customers...');
+    loadCustomers();
+    console.log('=== INITIALIZATION COMPLETE ===');
+});
+    </script>
+{% endblock %}

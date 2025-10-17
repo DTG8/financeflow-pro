@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FinanceFlow Pro{% endblock %}</title>
+    
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    
+    <style>
+        :root {
+            /* Clean Color Palette */
+            --primary: #1A73E8;
+            --primary-dark: #1557B0;
+            --success: #0F9D58;
+            --success-dark: #0B7A44;
+            --danger: #EA4335;
+            --warning: #F9AB00;
+            --info: #4285F4;
+            
+            /* Neutrals */
+            --gray-50: #F8F9FA;
+            --gray-100: #F1F3F4;
+            --gray-200: #E8EAED;
+            --gray-300: #DADCE0;
+            --gray-400: #BDC1C6;
+            --gray-500: #9AA0A6;
+            --gray-600: #80868B;
+            --gray-700: #5F6368;
+            --gray-800: #3C4043;
+            --gray-900: #202124;
+            
+            /* Backgrounds */
+            --bg-primary: #FFFFFF;
+            --bg-secondary: var(--gray-50);
+            --bg-tertiary: var(--gray-100);
+            
+            /* Text */
+            --text-primary: var(--gray-900);
+            --text-secondary: var(--gray-700);
+            --text-tertiary: var(--gray-600);
+            
+            /* Borders */
+            --border: var(--gray-300);
+            --border-light: var(--gray-200);
+            
+            /* Shadows */
+            --shadow-sm: 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);
+            --shadow-md: 0 1px 3px 0 rgba(60,64,67,.3), 0 4px 8px 3px rgba(60,64,67,.15);
+            --shadow-lg: 0 2px 6px 2px rgba(60,64,67,.15), 0 8px 24px 4px rgba(60,64,67,.15);
+            
+            /* Radius */
+            --radius-sm: 4px;
+            --radius: 8px;
+            --radius-lg: 12px;
+            --radius-xl: 16px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 14px;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        /* ==================== NAVBAR ==================== */
+        
+        .navbar {
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--border-light);
+            padding: 0;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .navbar-brand {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary) !important;
+            padding: 16px 0;
+        }
+        
+        .navbar-brand i {
+            color: var(--primary);
+            margin-right: 8px;
+        }
+        
+        .nav-link {
+            color: var(--text-secondary) !important;
+            font-weight: 500;
+            padding: 16px 16px !important;
+            transition: all 0.2s;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .nav-link:hover {
+            color: var(--primary) !important;
+        }
+        
+        .nav-link.active {
+            color: var(--primary) !important;
+            border-bottom-color: var(--primary);
+        }
+        
+        /* Dropdown styling */
+        .dropdown-menu {
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-md);
+            padding: 8px 0;
+            margin-top: 8px;
+        }
+        
+        .dropdown-item {
+            padding: 8px 16px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+        }
+        
+        .dropdown-item:hover {
+            background: var(--gray-50);
+            color: var(--primary);
+        }
+        
+        .dropdown-item.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .dropdown-item i {
+            width: 16px;
+            text-align: center;
+            display: inline-block !important;
+        }
+        
+        /* Ensure navbar doesn't overflow */
+        .navbar-nav {
+            flex-wrap: nowrap;
+        }
+        
+        .nav-item {
+            white-space: nowrap;
+        }
+        
+        /* ==================== CARDS ==================== */
+        
+        .card-clean {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-light);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s;
+        }
+        
+        .card-clean:hover {
+            box-shadow: var(--shadow-md);
+        }
+        
+        /* ==================== BUTTONS ==================== */
+        
+        .btn-primary-clean {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        
+        .btn-primary-clean:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .btn-success-clean {
+            background: var(--success);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .btn-success-clean:hover {
+            background: var(--success-dark);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .btn-danger-clean {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: var(--radius);
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .btn-danger-clean:hover {
+            background: #D93025;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        /* ==================== ALERTS ==================== */
+        
+        .alert {
+            border: none;
+            border-radius: var(--radius);
+            padding: 12px 16px;
+            font-weight: 500;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .alert-success {
+            background: #E6F4EA;
+            color: var(--success-dark);
+        }
+        
+        .alert-danger {
+            background: #FCE8E6;
+            color: var(--danger);
+        }
+        
+        .alert-warning {
+            background: #FEF7E0;
+            color: #E37400;
+        }
+        
+        /* ==================== UTILITY ==================== */
+        
+        .page-header {
+            padding: 32px 0 24px;
+        }
+        
+        .page-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        
+        .page-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+        }
+        
+        .text-muted-clean {
+            color: var(--text-secondary);
+        }
+        
+        /* ==================== RESPONSIVE ==================== */
+        
+        @media (max-width: 1200px) {
+            .nav-link {
+                padding: 16px 12px !important;
+                font-size: 13px;
+            }
+            
+            .navbar-brand {
+                font-size: 18px;
+            }
+        }
+        
+        @media (max-width: 992px) {
+            .nav-link {
+                padding: 16px 8px !important;
+                font-size: 12px;
+            }
+            
+            .navbar-nav > .nav-item > .nav-link i {
+                display: none;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 24px;
+            }
+            
+            .card-clean {
+                padding: 16px;
+            }
+            
+            .navbar-nav {
+                text-align: center;
+            }
+            
+            .nav-link {
+                padding: 12px 16px !important;
+                font-size: 14px;
+            }
+            
+            .nav-link i {
+                display: inline-block;
+                margin-right: 8px;
+            }
+        }
+    </style>
+    
+    {% block extra_styles %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-chart-line"></i>
+                FinanceFlow Pro
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'index' %}active{% endif %}" href="/">
+                            <i class="fas fa-home me-1"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'customers' %}active{% endif %}" href="/customers">
+                            <i class="fas fa-users me-1"></i> Customers
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'search' %}active{% endif %}" href="/search">
+                            <i class="fas fa-search me-1"></i> Search
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'reports' %}active{% endif %}" href="/reports">
+                            <i class="fas fa-chart-bar me-1"></i> Reports
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="mrcDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-chart-line me-1"></i> MRC Tools
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="mrcDropdown">
+                            <li><a class="dropdown-item {% if request.endpoint == 'mrc_analyzer' %}active{% endif %}" href="/mrc-analyzer">
+                                <i class="fas fa-chart-line me-2"></i> MRC Analyzer
+                            </a></li>
+                            <li><a class="dropdown-item {% if request.endpoint == 'mrc_excel_cross_reference' %}active{% endif %}" href="/mrc-analyzer/excel-cross-reference">
+                                <i class="fas fa-search me-2"></i> Cross-Reference
+                            </a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="analyticsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-chart-pie me-1"></i> Analytics
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="analyticsDropdown">
+                            <li><a class="dropdown-item {% if request.endpoint == 'forecasting' %}active{% endif %}" href="/forecasting">
+                                <i class="fas fa-chart-line me-2"></i> Forecasting
+                            </a></li>
+                            <li><a class="dropdown-item {% if request.endpoint == 'advanced_kpis' %}active{% endif %}" href="/advanced-kpis">
+                                <i class="fas fa-chart-pie me-2"></i> Advanced KPIs
+                            </a></li>
+                            <li><a class="dropdown-item {% if request.endpoint == 'advanced_analytics' %}active{% endif %}" href="/advanced-analytics">
+                                <i class="fas fa-brain me-2"></i> Advanced Analytics
+                            </a></li>
+                            <li><a class="dropdown-item {% if request.endpoint == 'automated_reports' %}active{% endif %}" href="/reports/automated">
+                                <i class="fas fa-file-pdf me-2"></i> Auto Reports
+                            </a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'database' %}active{% endif %}" href="/database">
+                            <i class="fas fa-database me-1"></i> Database
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container mt-3">
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+    
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>
+
+

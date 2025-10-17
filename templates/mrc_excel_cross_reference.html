@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+
+{% block title %}MRC Excel Cross-Reference - FinanceFlow Pro{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .upload-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 40px 20px;
+    }
+    
+    .upload-card {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        padding: 40px;
+        text-align: center;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    .upload-icon {
+        font-size: 64px;
+        color: var(--primary);
+        margin-bottom: 24px;
+    }
+    
+    .upload-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 16px;
+    }
+    
+    .upload-subtitle {
+        font-size: 16px;
+        color: var(--text-secondary);
+        margin-bottom: 32px;
+        line-height: 1.6;
+    }
+    
+    .file-input-container {
+        position: relative;
+        display: inline-block;
+        margin-bottom: 24px;
+    }
+    
+    .file-input {
+        position: absolute;
+        opacity: 0;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+    }
+    
+    .file-input-label {
+        display: inline-block;
+        padding: 16px 32px;
+        background: linear-gradient(135deg, var(--primary), var(--info));
+        color: white;
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        border: none;
+    }
+    
+    .file-input-label:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(26, 115, 232, 0.3);
+    }
+    
+    .file-name {
+        margin-top: 12px;
+        font-size: 14px;
+        color: var(--text-secondary);
+    }
+    
+    .upload-btn {
+        background: linear-gradient(135deg, var(--success), #0B7A44);
+        color: white;
+        padding: 16px 32px;
+        border: none;
+        border-radius: var(--radius-md);
+        font-weight: 600;
+        font-size: 16px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin-top: 16px;
+    }
+    
+    .upload-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(34, 197, 94, 0.3);
+    }
+    
+    .upload-btn:disabled {
+        background: var(--text-muted);
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+    
+    .info-section {
+        background: linear-gradient(135deg, var(--info), #0EA5E9);
+        color: white;
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        margin-top: 32px;
+        text-align: left;
+    }
+    
+    .info-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .info-title i {
+        margin-right: 8px;
+    }
+    
+    .info-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .info-list li {
+        padding: 8px 0;
+        display: flex;
+        align-items: center;
+    }
+    
+    .info-list li::before {
+        content: "✓";
+        color: #10B981;
+        font-weight: bold;
+        margin-right: 12px;
+        font-size: 16px;
+    }
+    
+    .requirements {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        margin-top: 24px;
+        text-align: left;
+    }
+    
+    .requirements h6 {
+        color: var(--text-primary);
+        font-weight: 600;
+        margin-bottom: 12px;
+    }
+    
+    .requirements ul {
+        margin: 0;
+        padding-left: 20px;
+    }
+    
+    .requirements li {
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="upload-container">
+    <div class="upload-card">
+        <div class="upload-icon">
+            <i class="fas fa-file-excel"></i>
+        </div>
+        
+        <h1 class="upload-title">MRC Excel Cross-Reference</h1>
+        <p class="upload-subtitle">
+            Upload an Excel file with customer names and transactions to generate a comprehensive cross-reference analysis
+        </p>
+        
+        <form action="/mrc-analyzer/excel-cross-reference/upload" method="post" enctype="multipart/form-data" id="uploadForm">
+            <div class="file-input-container">
+                <input type="file" name="file" id="fileInput" class="file-input" accept=".xlsx,.xls" required>
+                <label for="fileInput" class="file-input-label">
+                    <i class="fas fa-upload me-2"></i>Choose Excel File
+                </label>
+            </div>
+            <div class="file-name" id="fileName"></div>
+            
+            <button type="submit" class="upload-btn" id="uploadBtn" disabled>
+                <i class="fas fa-search me-2"></i>Cross-Reference Analysis
+            </button>
+        </form>
+        
+        <div class="info-section">
+            <h6 class="info-title">
+                <i class="fas fa-info-circle"></i>
+                What does this do?
+            </h6>
+            <ul class="info-list">
+                <li>Extracts customer names from Sheet 1 (new customers)</li>
+                <li>Processes transactions from Sheet 2 (bank transactions)</li>
+                <li>Cross-references customers with their transactions</li>
+                <li>Classifies transactions as MRC (recurring) or NRC (one-time)</li>
+                <li>Generates detailed monthly breakdowns for each customer</li>
+                <li>Creates comprehensive Excel report with summary and individual sheets</li>
+            </ul>
+        </div>
+        
+        <div class="requirements">
+            <h6>File Requirements:</h6>
+            <ul>
+                <li><strong>Sheet 1:</strong> Must contain customer names in a "Names" column</li>
+                <li><strong>Sheet 2:</strong> Must contain transactions with "Value Date", "Transaction Details", and "Deposit" columns</li>
+                <li><strong>Format:</strong> Excel file (.xlsx or .xls)</li>
+                <li><strong>Date Format:</strong> "01 Jan 2025" format for transaction dates</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('fileInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const fileName = document.getElementById('fileName');
+    const uploadBtn = document.getElementById('uploadBtn');
+    
+    if (file) {
+        fileName.textContent = `Selected: ${file.name}`;
+        uploadBtn.disabled = false;
+    } else {
+        fileName.textContent = '';
+        uploadBtn.disabled = true;
+    }
+});
+
+document.getElementById('uploadForm').addEventListener('submit', function(e) {
+    const uploadBtn = document.getElementById('uploadBtn');
+    uploadBtn.disabled = true;
+    uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+});
+</script>
+{% endblock %}
+

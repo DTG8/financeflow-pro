@@ -1,0 +1,349 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - FinanceFlow Pro{% endblock %}
+
+{% block extra_styles %}
+    <style>
+    .upload-zone {
+        background: var(--bg-primary);
+        border: 2px dashed var(--border);
+        border-radius: var(--radius-lg);
+        padding: 48px 32px;
+        text-align: center;
+        transition: all 0.3s;
+        cursor: pointer;
+    }
+    
+    .upload-zone:hover {
+        border-color: var(--primary);
+        background: var(--bg-tertiary);
+    }
+    
+    .upload-zone.dragover {
+        border-color: var(--primary);
+        background: #E8F0FE;
+    }
+    
+    .upload-icon {
+        width: 80px;
+        height: 80px;
+        background: var(--bg-tertiary);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        font-size: 36px;
+        color: var(--primary);
+    }
+    
+    .stat-card {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+            text-align: center;
+        transition: all 0.2s;
+    }
+    
+    .stat-card:hover {
+        box-shadow: var(--shadow-md);
+        transform: translateY(-2px);
+    }
+    
+    .stat-icon {
+        width: 56px;
+        height: 56px;
+        background: var(--bg-tertiary);
+        border-radius: var(--radius);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 16px;
+        font-size: 24px;
+    }
+    
+    .stat-icon.primary { color: var(--primary); }
+    .stat-icon.success { color: var(--success); }
+    .stat-icon.warning { color: var(--warning); }
+    .stat-icon.info { color: var(--info); }
+    
+    .stat-value {
+        font-size: 32px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+    }
+    
+    .stat-label {
+        font-size: 13px;
+        color: var(--text-secondary);
+        font-weight: 500;
+    }
+    
+    .customer-card {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius);
+        padding: 16px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: all 0.2s;
+    }
+    
+    .customer-card:hover {
+        box-shadow: var(--shadow-sm);
+        border-color: var(--border);
+    }
+    
+    .customer-rank {
+        width: 40px;
+        height: 40px;
+        background: var(--bg-tertiary);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 16px;
+        margin-right: 16px;
+    }
+    
+    .customer-rank.gold { background: #FFF4E6; color: #E37400; }
+    .customer-rank.silver { background: #F5F5F5; color: #5F6368; }
+    .customer-rank.bronze { background: #FBE9E7; color: #D84315; }
+    
+    .customer-amount {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--success);
+        }
+
+    /* Processing overlay */
+    .processing-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(32, 33, 36, 0.35);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+        backdrop-filter: blur(2px);
+    }
+    .processing-card {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        padding: 28px 24px;
+        width: 420px;
+        text-align: center;
+        box-shadow: var(--shadow-lg);
+    }
+    .processing-card h5 { margin: 12px 0 6px; font-weight: 700; }
+    .processing-card p { margin: 0; color: var(--text-secondary); }
+    </style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1 class="page-title">Dashboard</h1>
+        <p class="page-subtitle">Upload bank statements and view financial analytics</p>
+        </div>
+
+        <!-- Upload Section -->
+    <div class="row mb-4">
+            <div class="col-lg-8 mx-auto">
+            <form id="uploadForm" method="POST" action="/upload" enctype="multipart/form-data">
+                <div class="upload-zone" id="uploadZone">
+                    <div id="uploadContent">
+                        <div class="upload-icon">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <h4 style="margin-bottom: 8px; font-weight: 600;">Upload Bank Statement</h4>
+                        <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                            Drag and drop your file here or click to browse
+                        </p>
+                        <p style="font-size: 12px; color: var(--text-tertiary);">
+                            Supports: CSV, Excel (.xlsx, .xls), PDF • Max 50MB
+                        </p>
+                                </div>
+                            </div>
+                <input type="file" name="file" id="fileInput" accept=".csv,.xlsx,.xls,.pdf" style="display: none;" required>
+                <div class="text-center mt-3">
+                    <button type="submit" class="btn-primary-clean" id="uploadBtn" style="display: none;">
+                        <i class="fas fa-upload me-2"></i>Process File
+                                </button>
+                            </div>
+                        </form>
+            </div>
+        </div>
+
+    <!-- Stats Section -->
+    <div id="statsSection" style="display: none;">
+        <div class="row mb-4">
+            <div class="col-md-3 mb-3">
+                <div class="stat-card">
+                    <div class="stat-icon primary">
+                        <i class="fas fa-receipt"></i>
+                    </div>
+                    <div class="stat-value" id="totalTransactions">0</div>
+                    <div class="stat-label">Transactions</div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="stat-card">
+                    <div class="stat-icon success">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                    <div class="stat-value" id="totalAmount">₦0</div>
+                    <div class="stat-label">Total Revenue</div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="stat-card">
+                    <div class="stat-icon info">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-value" id="totalCustomers">0</div>
+                    <div class="stat-label">Customers</div>
+                </div>
+            </div>
+            <div class="col-md-3 mb-3">
+                <div class="stat-card">
+                    <div class="stat-icon warning">
+                        <i class="fas fa-university"></i>
+                    </div>
+                    <div class="stat-value" id="totalBanks">0</div>
+                    <div class="stat-label">Banks</div>
+                </div>
+            </div>
+                </div>
+        
+        <!-- Top Customers -->
+        <div class="card-clean">
+            <h5 class="section-title">Top 5 Customers</h5>
+            <div id="topCustomersList">
+                <!-- Populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+    <script>
+// Upload Zone Interactions
+const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+
+uploadZone.addEventListener('click', () => fileInput.click());
+        
+uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+    uploadZone.classList.add('dragover');
+        });
+        
+uploadZone.addEventListener('dragleave', () => {
+    uploadZone.classList.remove('dragover');
+        });
+        
+uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+    uploadZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                fileInput.files = files;
+        updateUploadZone(files[0]);
+    }
+});
+
+fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length > 0) {
+        updateUploadZone(e.target.files[0]);
+    }
+});
+
+function updateUploadZone(file) {
+    const uploadContent = document.getElementById('uploadContent');
+    uploadContent.innerHTML = `
+        <div class="upload-icon" style="background: #E8F5E9;">
+            <i class="fas fa-check-circle" style="color: var(--success);"></i>
+        </div>
+        <h4 style="margin-bottom: 8px; font-weight: 600; color: var(--success);">File Selected</h4>
+        <p style="color: var(--text-primary); margin-bottom: 4px; font-weight: 600;">${file.name}</p>
+        <p style="font-size: 12px; color: var(--text-tertiary);">${(file.size / 1024).toFixed(2)} KB</p>
+    `;
+    uploadBtn.style.display = 'inline-block';
+}
+
+// Load Stats
+        function loadStats() {
+    fetch('/api/stats')
+        .then(res => res.json())
+                .then(data => {
+            if (data.total_transactions > 0) {
+                        document.getElementById('statsSection').style.display = 'block';
+                
+                // Update stats
+                document.getElementById('totalTransactions').textContent = data.total_transactions.toLocaleString();
+                document.getElementById('totalAmount').textContent = '₦' + data.total_amount.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0});
+                document.getElementById('totalCustomers').textContent = data.unique_customers.toLocaleString();
+                document.getElementById('totalBanks').textContent = data.unique_banks;
+                
+                // Display top customers
+                if (data.top_customers && data.top_customers.length > 0) {
+                    displayTopCustomers(data.top_customers);
+                }
+            }
+        })
+        .catch(err => console.log('No data yet'));
+}
+
+function displayTopCustomers(customers) {
+    const container = document.getElementById('topCustomersList');
+    const ranks = ['gold', 'silver', 'bronze', '', ''];
+    
+    container.innerHTML = customers.map((customer, index) => `
+        <div class="customer-card">
+            <div style="display: flex; align-items: center;">
+                <div class="customer-rank ${ranks[index]}">${index + 1}</div>
+                <div>
+                    <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 2px;">${customer.name}</div>
+                    <div style="font-size: 12px; color: var(--text-secondary);">${customer.count} transactions</div>
+                </div>
+            </div>
+            <div class="customer-amount">
+                ₦${customer.total.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}
+            </div>
+        </div>
+    `).join('');
+}
+
+// Load on page load
+window.addEventListener('load', loadStats);
+    </script>
+    
+    <!-- Processing overlay (appended at body end so it can overlay everything) -->
+    <div class="processing-overlay" id="processingOverlay" aria-live="polite" aria-busy="true">
+        <div class="processing-card">
+            <div class="spinner-border text-primary" role="status" style="width: 2.25rem; height: 2.25rem;"></div>
+            <h5>Processing your file…</h5>
+            <p>This may take a moment. Please don’t close this tab.</p>
+        </div>
+    </div>
+    
+    <script>
+// Show processing overlay on submit
+document.getElementById('uploadForm').addEventListener('submit', function () {
+    const overlay = document.getElementById('processingOverlay');
+    overlay.style.display = 'flex';
+});
+    </script>
+{% endblock %}

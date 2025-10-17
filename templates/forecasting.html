@@ -1,0 +1,350 @@
+{% extends "base.html" %}
+
+{% block title %}Revenue Forecasting - FinanceFlow{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-1">Revenue Forecasting</h1>
+                    <p class="text-muted mb-0">Predict future revenue using advanced machine learning models</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <select id="forecastDays" class="form-select" style="width: auto;">
+                        <option value="7">7 days</option>
+                        <option value="14">14 days</option>
+                        <option value="30" selected>30 days</option>
+                        <option value="60">60 days</option>
+                        <option value="90">90 days</option>
+                    </select>
+                    <button id="refreshForecast" class="btn btn-primary">
+                        <i class="fas fa-sync-alt me-1"></i> Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loadingState" class="text-center py-5" style="display: none;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-3 text-muted">Generating forecasts...</p>
+    </div>
+
+    <!-- Forecast Results -->
+    <div id="forecastResults" style="display: none;">
+        <!-- Summary Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title text-white-50">Total Forecast</h6>
+                                <h4 id="totalForecast" class="mb-0">₦0</h4>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-crystal-ball fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title text-white-50">Best Method</h6>
+                                <h5 id="bestMethod" class="mb-0">-</h5>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-trophy fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title text-white-50">Avg Daily</h6>
+                                <h4 id="avgDaily" class="mb-0">₦0</h4>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-chart-line fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title text-white-50">Confidence</h6>
+                                <h5 id="confidence" class="mb-0">-</h5>
+                            </div>
+                            <div class="align-self-center">
+                                <i class="fas fa-shield-alt fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Forecast Chart -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Revenue Forecast Comparison</h5>
+                        <p class="text-muted mb-0">Multiple forecasting methods compared</p>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="forecastChart" height="100"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Method Details -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Forecasting Methods & Accuracy</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Method</th>
+                                        <th>Confidence</th>
+                                        <th>MAE</th>
+                                        <th>RMSE</th>
+                                        <th>Total Forecast</th>
+                                        <th>Avg Daily</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="methodsTable">
+                                    <!-- Populated by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error State -->
+    <div id="errorState" class="text-center py-5" style="display: none;">
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+            <h5>Forecast Generation Failed</h5>
+            <p id="errorMessage" class="mb-0">Unable to generate forecasts. Please try again.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let forecastChart = null;
+
+function loadForecasts() {
+    const days = document.getElementById('forecastDays').value;
+    const loadingState = document.getElementById('loadingState');
+    const forecastResults = document.getElementById('forecastResults');
+    const errorState = document.getElementById('errorState');
+    
+    // Show loading
+    loadingState.style.display = 'block';
+    forecastResults.style.display = 'none';
+    errorState.style.display = 'none';
+    
+    fetch(`/api/forecast?days=${days}`)
+        .then(res => res.json())
+        .then(data => {
+            loadingState.style.display = 'none';
+            
+            // Check for errors
+            const hasErrors = Object.values(data).some(forecast => forecast.error);
+            if (hasErrors) {
+                errorState.style.display = 'block';
+                return;
+            }
+            
+            // Display results
+            displayForecasts(data);
+            forecastResults.style.display = 'block';
+        })
+        .catch(err => {
+            console.error('Error loading forecasts:', err);
+            loadingState.style.display = 'none';
+            errorState.style.display = 'block';
+            document.getElementById('errorMessage').textContent = err.message;
+        });
+}
+
+function displayForecasts(forecasts) {
+    // Calculate summary stats
+    const validForecasts = Object.values(forecasts).filter(f => !f.error);
+    const ensembleForecast = forecasts.ensemble;
+    
+    if (ensembleForecast && !ensembleForecast.error) {
+        const totalForecast = ensembleForecast.predictions.reduce((sum, p) => sum + p.amount, 0);
+        const avgDaily = totalForecast / ensembleForecast.predictions.length;
+        
+        document.getElementById('totalForecast').textContent = '₦' + totalForecast.toLocaleString();
+        document.getElementById('avgDaily').textContent = '₦' + avgDaily.toLocaleString();
+        document.getElementById('bestMethod').textContent = ensembleForecast.method;
+        document.getElementById('confidence').textContent = ensembleForecast.confidence;
+    }
+    
+    // Create chart
+    createForecastChart(forecasts);
+    
+    // Populate methods table
+    populateMethodsTable(validForecasts);
+}
+
+function createForecastChart(forecasts) {
+    const ctx = document.getElementById('forecastChart').getContext('2d');
+    
+    // Destroy existing chart
+    if (forecastChart) {
+        forecastChart.destroy();
+    }
+    
+    // Prepare data
+    const datasets = [];
+    const colors = ['#1A73E8', '#0F9D58', '#F9AB00', '#EA4335', '#4285F4', '#9C27B0'];
+    let colorIndex = 0;
+    
+    Object.entries(forecasts).forEach(([key, forecast]) => {
+        if (forecast.error) return;
+        
+        const data = forecast.predictions.map(p => ({
+            x: p.date,
+            y: p.amount
+        }));
+        
+        datasets.push({
+            label: forecast.method,
+            data: data,
+            borderColor: colors[colorIndex % colors.length],
+            backgroundColor: colors[colorIndex % colors.length] + '20',
+            borderWidth: 2,
+            fill: false,
+            tension: 0.4
+        });
+        
+        colorIndex++;
+    });
+    
+    forecastChart = new Chart(ctx, {
+        type: 'line',
+        data: { datasets },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top'
+                },
+                tooltip: {
+                    callbacks: {
+                        title: function(context) {
+                            const date = new Date(context[0].parsed.x);
+                            return date.toLocaleDateString('en-US', { 
+                                year: 'numeric', 
+                                month: 'short', 
+                                day: 'numeric' 
+                            });
+                        },
+                        label: function(context) {
+                            return context.dataset.label + ': ₦' + context.parsed.y.toLocaleString();
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    type: 'time',
+                    time: {
+                        unit: 'day',
+                        displayFormats: {
+                            day: 'MMM d',
+                            month: 'MMM yyyy'
+                        }
+                    },
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 45
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '₦' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function populateMethodsTable(forecasts) {
+    const tbody = document.getElementById('methodsTable');
+    tbody.innerHTML = '';
+    
+    forecasts.forEach(forecast => {
+        const totalForecast = forecast.predictions.reduce((sum, p) => sum + p.amount, 0);
+        const avgDaily = totalForecast / forecast.predictions.length;
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td><strong>${forecast.method}</strong></td>
+            <td><span class="badge bg-${getConfidenceColor(forecast.confidence)}">${forecast.confidence}</span></td>
+            <td>₦${forecast.accuracy.mae.toLocaleString()}</td>
+            <td>₦${forecast.accuracy.rmse.toLocaleString()}</td>
+            <td><strong>₦${totalForecast.toLocaleString()}</strong></td>
+            <td>₦${avgDaily.toLocaleString()}</td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+function getConfidenceColor(confidence) {
+    switch(confidence.toLowerCase()) {
+        case 'very high': return 'success';
+        case 'high': return 'info';
+        case 'medium': return 'warning';
+        case 'low': return 'danger';
+        default: return 'secondary';
+    }
+}
+
+// Event listeners
+document.getElementById('refreshForecast').addEventListener('click', loadForecasts);
+document.getElementById('forecastDays').addEventListener('change', loadForecasts);
+
+// Load forecasts on page load
+window.addEventListener('load', loadForecasts);
+</script>
+{% endblock %}
+

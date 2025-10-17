@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+
+{% block title %}{{ customer_name }} - MRC Details{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .customer-profile {
+        background: linear-gradient(135deg, var(--success), #0B7A44);
+        color: white;
+        border-radius: var(--radius-lg);
+        padding: 32px;
+        margin-bottom: 24px;
+    }
+    
+    .profile-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+    
+    .profile-avatar {
+        width: 80px;
+        height: 80px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        font-weight: 700;
+        margin-right: 20px;
+    }
+    
+    .profile-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 16px;
+    }
+    
+    .profile-stat {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 16px;
+        border-radius: var(--radius);
+    }
+    
+    .profile-stat-value {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+    
+    .profile-stat-label {
+        font-size: 12px;
+        opacity: 0.9;
+    }
+    
+    .monthly-breakdown {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        margin-bottom: 24px;
+    }
+    
+    .month-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 12px;
+        margin-top: 16px;
+    }
+    
+    .month-card {
+        background: var(--bg-secondary);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius);
+        padding: 16px;
+        text-align: center;
+        transition: all 0.2s;
+    }
+    
+    .month-card.active {
+        background: linear-gradient(135deg, var(--success), #0B7A44);
+        color: white;
+        border-color: var(--success);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+    
+    .month-name {
+        font-size: 11px;
+        text-transform: uppercase;
+        font-weight: 600;
+        margin-bottom: 8px;
+        opacity: 0.8;
+    }
+    
+    .month-card.active .month-name {
+        opacity: 1;
+    }
+    
+    .month-amount {
+        font-size: 18px;
+        font-weight: 700;
+    }
+    
+    .transactions-table-container {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+    }
+    
+    .transactions-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .transactions-table thead {
+        background: var(--bg-tertiary);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+    
+    .transactions-table th {
+        padding: 16px 12px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 11px;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        border-bottom: 2px solid var(--border);
+    }
+    
+    .transactions-table td {
+        padding: 14px 12px;
+        border-bottom: 1px solid var(--border-light);
+        color: var(--text-primary);
+        font-size: 13px;
+    }
+    
+    .transactions-table tbody tr:hover {
+        background: var(--bg-secondary);
+    }
+    
+    .transactions-table tfoot {
+        background: var(--bg-tertiary);
+        font-weight: 700;
+    }
+    
+    .amount-cell {
+        font-weight: 600;
+        color: var(--success);
+        text-align: right;
+    }
+    
+    .back-button {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px;
+        background: var(--bg-secondary);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        color: var(--text-primary);
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.2s;
+        margin-bottom: 20px;
+    }
+    
+    .back-button:hover {
+        background: var(--bg-tertiary);
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <a href="/mrc-analyzer/results/{{ session_id }}" class="back-button">
+        <i class="fas fa-arrow-left"></i> Back to Results
+    </a>
+    
+    <!-- Customer Profile Card -->
+    <div class="customer-profile">
+        <div class="profile-header">
+            <div class="profile-avatar">{{ initials }}</div>
+            <div>
+                <h2 style="margin-bottom: 4px;">{{ customer_name }}</h2>
+                <p style="opacity: 0.9; margin: 0;">MRC Transaction History</p>
+            </div>
+        </div>
+
+        <div class="profile-stats">
+            <div class="profile-stat">
+                <div class="profile-stat-value">₦{{ "{:,.0f}".format(total_mrc) }}</div>
+                <div class="profile-stat-label">Total MRC (Recurring)</div>
+            </div>
+            <div class="profile-stat">
+                <div class="profile-stat-value">{{ transaction_count }}</div>
+                <div class="profile-stat-label">Total Transactions</div>
+            </div>
+            <div class="profile-stat">
+                <div class="profile-stat-value">₦{{ "{:,.0f}".format(avg_amount) }}</div>
+                <div class="profile-stat-label">Avg MRC per Month</div>
+            </div>
+            <div class="profile-stat">
+                <div class="profile-stat-value">{{ active_months }}</div>
+                <div class="profile-stat-label">Active Months</div>
+            </div>
+            {% if total_nrc > 0 %}
+            <div class="profile-stat" style="grid-column: span 2; background: rgba(255, 255, 255, 0.2);">
+                <div class="profile-stat-value">₦{{ "{:,.0f}".format(total_nrc) }}</div>
+                <div class="profile-stat-label">Total NRC (Installation Fee)</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Monthly Breakdown -->
+    <div class="monthly-breakdown">
+        <h5 class="section-title">Monthly Breakdown</h5>
+        <div class="month-grid">
+            {% for month in ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September'] %}
+            <div class="month-card {% if monthly.get(month, 0) > 0 %}active{% endif %}">
+                <div class="month-name">{{ month[:3] }}</div>
+                <div class="month-amount">
+                    {% if monthly.get(month, 0) > 0 %}
+                        ₦{{ "{:,.0f}".format(monthly.get(month, 0)) }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Transactions Table -->
+    <div class="transactions-table-container">
+        <table class="transactions-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Date</th>
+                    <th>Month</th>
+                    <th>Amount (MRC)</th>
+                    <th style="width: 35%;">Transaction Details</th>
+                    <th>Entity Number</th>
+                    <th>NRC</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for txn in transactions %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ txn.date if txn.date else 'N/A' }}</td>
+                    <td style="font-weight: 600;">{{ txn.month }}</td>
+                    <td class="amount-cell">₦{{ "{:,.2f}".format(txn.amount) }}</td>
+                    <td style="font-size: 12px;">{{ txn.details[:80] }}{% if txn.details|length > 80 %}...{% endif %}</td>
+                    <td style="font-family: monospace; font-size: 12px;">{{ txn.entity_number if txn.entity_number else 'N/A' }}</td>
+                    <td class="amount-cell">₦{{ "{:,.0f}".format(txn.nrc) if txn.nrc else '-' }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="3" style="text-align: right;">TOTAL:</td>
+                    <td class="amount-cell">₦{{ "{:,.2f}".format(total_mrc) }}</td>
+                    <td colspan="3"></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    
+</div>
+{% endblock %}
+

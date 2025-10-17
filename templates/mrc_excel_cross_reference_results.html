@@ -1,0 +1,437 @@
+{% extends "base.html" %}
+
+{% block title %}MRC Excel Cross-Reference Results - FinanceFlow Pro{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .results-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .summary-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 32px;
+    }
+    
+    .stat-card {
+        background: linear-gradient(135deg, var(--primary), var(--info));
+        color: white;
+        border-radius: var(--radius-lg);
+        padding: 20px;
+        text-align: center;
+    }
+    
+    .stat-card.success {
+        background: linear-gradient(135deg, var(--success), #0B7A44);
+    }
+    
+    .stat-card.warning {
+        background: linear-gradient(135deg, var(--warning), #E37400);
+    }
+    
+    .stat-value {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+    
+    .stat-label {
+        font-size: 12px;
+        opacity: 0.9;
+    }
+    
+    .export-section {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        text-align: center;
+        margin-bottom: 24px;
+    }
+    
+    .export-section h5 {
+        margin-bottom: 16px;
+        font-weight: 600;
+    }
+    
+    .export-buttons {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .btn-success-clean {
+        background: linear-gradient(135deg, var(--success), #0B7A44);
+        color: white;
+        padding: 12px 24px;
+        border-radius: var(--radius-md);
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        font-size: 14px;
+    }
+    
+    .btn-success-clean:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(34, 197, 94, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+    
+    .btn-primary-clean {
+        background: linear-gradient(135deg, var(--primary), var(--info));
+        color: white;
+        padding: 12px 24px;
+        border-radius: var(--radius-md);
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        font-size: 14px;
+    }
+    
+    .btn-primary-clean:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(26, 115, 232, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+    
+    .customer-table-container {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        margin-bottom: 24px;
+    }
+    
+    .customer-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .customer-table th {
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        font-weight: 600;
+        padding: 16px;
+        text-align: left;
+        border-bottom: 1px solid var(--border-light);
+    }
+    
+    .customer-table td {
+        padding: 16px;
+        border-bottom: 1px solid var(--border-light);
+        color: var(--text-secondary);
+    }
+    
+    .customer-table tr:hover {
+        background: var(--bg-secondary);
+    }
+    
+    .customer-name {
+        font-weight: 600;
+        color: var(--text-primary);
+        cursor: pointer;
+    }
+    
+    .customer-name:hover {
+        color: var(--primary);
+    }
+    
+    .amount {
+        font-weight: 600;
+        color: var(--success);
+    }
+    
+    .monthly-breakdown {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    
+    .month-tag {
+        background: var(--bg-secondary);
+        color: var(--text-secondary);
+        padding: 4px 8px;
+        border-radius: var(--radius-sm);
+        font-size: 12px;
+        font-weight: 500;
+    }
+    
+    .month-tag.has-amount {
+        background: var(--success);
+        color: white;
+    }
+    
+    .filter-bar {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        padding: 16px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+    
+    .filter-bar label {
+        font-weight: 600;
+        color: var(--text-secondary);
+    }
+    
+    .filter-bar input {
+        padding: 8px 12px;
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-md);
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        flex: 1;
+        min-width: 200px;
+    }
+    
+    .filter-bar input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.1);
+    }
+    
+    .no-results {
+        text-align: center;
+        padding: 40px;
+        color: var(--text-secondary);
+    }
+    
+    .no-results i {
+        font-size: 48px;
+        margin-bottom: 16px;
+        color: var(--text-muted);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="results-container">
+    <h1 class="mb-4">
+        <i class="fas fa-search me-2"></i>MRC Excel Cross-Reference Results
+    </h1>
+    
+    <!-- Summary Stats -->
+    <div class="summary-stats">
+        <div class="stat-card">
+            <div class="stat-value">{{ "{:,}".format(data.summary.total_customers) }}</div>
+            <div class="stat-label">Unique Customers</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ "{:,}".format(data.summary.total_entries) }}</div>
+            <div class="stat-label">Total Entries</div>
+        </div>
+        <div class="stat-card success">
+            <div class="stat-value">₦{{ "{:,}".format(data.summary.total_mrc) }}</div>
+            <div class="stat-label">Total MRC</div>
+        </div>
+        <div class="stat-card warning">
+            <div class="stat-value">₦{{ "{:,}".format(data.summary.total_nrc) }}</div>
+            <div class="stat-label">Total NRC</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ "{:,}".format(data.summary.total_transactions) }}</div>
+            <div class="stat-label">Total Transactions</div>
+        </div>
+    </div>
+    
+    <!-- Export Section -->
+    <div class="export-section">
+        <h5><i class="fas fa-download me-2"></i>Export Analysis</h5>
+        <div class="export-buttons">
+            <a href="/mrc-analyzer/excel-cross-reference/export/{{ session_id }}" class="btn-success-clean">
+                <i class="fas fa-file-excel me-2"></i>Download Complete Excel Report
+            </a>
+            <a href="/mrc-analyzer/excel-cross-reference" class="btn-primary-clean">
+                <i class="fas fa-upload me-2"></i>Analyze Another File
+            </a>
+        </div>
+        <p style="margin-top: 12px; font-size: 13px; color: var(--text-secondary);">
+            Excel file includes Summary sheet + Individual sheets for each customer with MRC/NRC breakdown
+        </p>
+    </div>
+    
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+        <label style="font-weight: 600; color: var(--text-secondary);">
+            <i class="fas fa-filter"></i> Search:
+        </label>
+        <input type="text" id="searchInput" placeholder="Search customers..." onkeyup="filterCustomers()">
+    </div>
+    
+    <!-- Customers Table -->
+    <div class="customer-table-container">
+        <table class="customer-table" id="customersTable">
+            <thead>
+                <tr>
+                    <th>Customer Name</th>
+                    <th>Total MRC</th>
+                    <th>Total NRC</th>
+                    <th>Transactions</th>
+                    <th>Monthly Breakdown</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for customer, info in data.customers.items() %}
+                <tr class="customer-row">
+                    <td>
+                        <div class="customer-name" onclick="showCustomerDetails('{{ customer }}')">
+                            {{ customer }}
+                        </div>
+                    </td>
+                    <td class="amount">₦{{ "{:,}".format(info.total_mrc) }}</td>
+                    <td class="amount">₦{{ "{:,}".format(info.total_nrc) }}</td>
+                    <td>{{ info.transaction_count }}</td>
+                    <td>
+                        <div class="monthly-breakdown">
+                            {% for month in ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'] %}
+                                {% set amount = info.monthly_breakdown.get(month, 0) %}
+                                <span class="month-tag {% if amount > 0 %}has-amount{% endif %}">
+                                    {{ month[:3] }}: ₦{{ "{:,}".format(amount) }}
+                                </span>
+                            {% endfor %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    {% if not data.customers %}
+    <div class="no-results">
+        <i class="fas fa-search"></i>
+        <h4>No customers found</h4>
+        <p>No matching customers were found in the transactions. Please check your file format.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Customer Details Modal -->
+<div class="modal fade" id="customerModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="customerModalTitle">Customer Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="customerModalBody">
+                <!-- Customer details will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function filterCustomers() {
+    const input = document.getElementById('searchInput');
+    const filter = input.value.toLowerCase();
+    const table = document.getElementById('customersTable');
+    const rows = table.getElementsByClassName('customer-row');
+    
+    for (let i = 0; i < rows.length; i++) {
+        const customerName = rows[i].getElementsByClassName('customer-name')[0];
+        if (customerName) {
+            const text = customerName.textContent.toLowerCase();
+            if (text.indexOf(filter) > -1) {
+                rows[i].style.display = '';
+            } else {
+                rows[i].style.display = 'none';
+            }
+        }
+    }
+}
+
+function showCustomerDetails(customerName) {
+    // Get customer data from the table
+    const customerData = {{ data.customers | tojson }};
+    const customer = customerData[customerName];
+    
+    if (!customer) return;
+    
+    // Create modal content
+    let modalContent = `
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Customer Information</h6>
+                <p><strong>Name:</strong> ${customerName}</p>
+                <p><strong>Total MRC:</strong> ₦${customer.total_mrc.toLocaleString()}</p>
+                <p><strong>Total NRC:</strong> ₦${customer.total_nrc.toLocaleString()}</p>
+                <p><strong>Transaction Count:</strong> ${customer.transaction_count}</p>
+            </div>
+            <div class="col-md-6">
+                <h6>Monthly Breakdown</h6>
+                <div class="monthly-breakdown">
+    `;
+    
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    months.forEach(month => {
+        const amount = customer.monthly_breakdown[month] || 0;
+        modalContent += `<span class="month-tag ${amount > 0 ? 'has-amount' : ''}">${month.substring(0, 3)}: ₦${amount.toLocaleString()}</span>`;
+    });
+    
+    modalContent += `
+                </div>
+            </div>
+        </div>
+        <hr>
+        <h6>Transaction Details</h6>
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Month</th>
+                        <th>Amount</th>
+                        <th>Type</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    customer.transactions.forEach(transaction => {
+        modalContent += `
+            <tr>
+                <td>${transaction.date}</td>
+                <td>${transaction.month}</td>
+                <td>₦${transaction.amount.toLocaleString()}</td>
+                <td><span class="badge ${transaction.type === 'MRC' ? 'bg-success' : 'bg-warning'}">${transaction.type}</span></td>
+                <td>${transaction.details}</td>
+            </tr>
+        `;
+    });
+    
+    modalContent += `
+                </tbody>
+            </table>
+        </div>
+    `;
+    
+    // Show modal
+    document.getElementById('customerModalTitle').textContent = customerName;
+    document.getElementById('customerModalBody').innerHTML = modalContent;
+    
+    const modal = new bootstrap.Modal(document.getElementById('customerModal'));
+    modal.show();
+}
+</script>
+{% endblock %}

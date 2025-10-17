@@ -1,0 +1,759 @@
+{% extends "base.html" %}
+
+{% block title %}Advanced Analytics - FinanceFlow{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h3 mb-1">Advanced Analytics</h1>
+                    <p class="text-muted mb-0">Comprehensive financial insights with ML-powered analysis</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <select id="timeFilter" class="form-select" style="width: auto;">
+                        <option value="7">Last 7 days</option>
+                        <option value="30" selected>Last 30 days</option>
+                        <option value="90">Last 90 days</option>
+                        <option value="0">All time</option>
+                    </select>
+                    <button id="refreshAnalytics" class="btn btn-primary">
+                        <i class="fas fa-sync-alt me-1"></i> Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loadingState" class="text-center py-5" style="display: none;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-3 text-muted">Analyzing data with advanced algorithms...</p>
+    </div>
+
+    <!-- Analytics Results -->
+    <div id="analyticsResults" style="display: none;">
+        <!-- Growth Rates Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-chart-line me-2"></i>Growth Rate Analysis
+                        </h5>
+                        <p class="text-muted mb-0">Month-over-Month, Year-over-Year, and CAGR calculations</p>
+                    </div>
+                    <div class="card-body">
+                        <div class="row" id="growthMetrics">
+                            <!-- Populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seasonality Analysis -->
+        <div class="row mb-4">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-calendar-alt me-2"></i>Seasonality Analysis
+                        </h5>
+                        <p class="text-muted mb-0">Monthly and quarterly revenue patterns</p>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="seasonalityChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Seasonal Insights</h5>
+                    </div>
+                    <div class="card-body" id="seasonalInsights">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Churn Analysis -->
+        <div class="row mb-4">
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-heart-broken me-2"></i>Customer Churn Analysis
+                        </h5>
+                        <p class="text-muted mb-0">Retention rates and churn patterns</p>
+                    </div>
+                    <div class="card-body">
+                        <div class="row" id="churnMetrics">
+                            <!-- Populated by JavaScript -->
+                        </div>
+                        <canvas id="churnChart" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Anomaly Detection
+                        </h5>
+                        <p class="text-muted mb-0">Unusual transactions and patterns</p>
+                    </div>
+                    <div class="card-body">
+                        <div class="row" id="anomalyMetrics">
+                            <!-- Populated by JavaScript -->
+                        </div>
+                        <div id="anomalyList" class="mt-3">
+                            <!-- Populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cash Flow Analysis -->
+        <div class="row mb-4">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-coins me-2"></i>Cash Flow Analysis
+                        </h5>
+                        <p class="text-muted mb-0">Daily and monthly cash flow patterns</p>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="cashFlowChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Cash Flow Metrics</h5>
+                    </div>
+                    <div class="card-body" id="cashFlowMetrics">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Revenue Concentration Risk -->
+        <div class="row mb-4">
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-shield-alt me-2"></i>Revenue Concentration Risk
+                        </h5>
+                        <p class="text-muted mb-0">Customer concentration and risk assessment</p>
+                    </div>
+                    <div class="card-body" id="concentrationMetrics">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-user-plus me-2"></i>Customer Acquisition Cost (CAC)
+                        </h5>
+                        <p class="text-muted mb-0">Cost analysis for customer acquisition</p>
+                    </div>
+                    <div class="card-body" id="cacMetrics">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comparative Analysis -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-balance-scale me-2"></i>Comparative Analysis
+                                </h5>
+                                <p class="text-muted mb-0">Period-over-period performance comparison</p>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <select id="comparisonPeriod" class="form-select" style="width: auto;">
+                                    <option value="monthly">Monthly</option>
+                                    <option value="quarterly">Quarterly</option>
+                                    <option value="yearly">Yearly</option>
+                                </select>
+                                <button id="loadComparison" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-sync-alt me-1"></i> Update
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="row" id="comparisonMetrics">
+                            <!-- Populated by JavaScript -->
+                        </div>
+                        <canvas id="comparisonChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error State -->
+    <div id="errorState" class="text-center py-5" style="display: none;">
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle fa-2x mb-3"></i>
+            <h5>Analysis Failed</h5>
+            <p id="errorMessage" class="mb-0">Unable to perform advanced analysis. Please try again.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let seasonalityChart = null;
+let churnChart = null;
+let cashFlowChart = null;
+let comparisonChart = null;
+
+function loadAdvancedAnalytics() {
+    const days = document.getElementById('timeFilter').value;
+    const loadingState = document.getElementById('loadingState');
+    const analyticsResults = document.getElementById('analyticsResults');
+    const errorState = document.getElementById('errorState');
+    
+    // Show loading
+    loadingState.style.display = 'block';
+    analyticsResults.style.display = 'none';
+    errorState.style.display = 'none';
+    
+    fetch(`/api/advanced-analytics?days=${days}`)
+        .then(res => res.json())
+        .then(data => {
+            loadingState.style.display = 'none';
+            
+            if (data.error) {
+                errorState.style.display = 'block';
+                document.getElementById('errorMessage').textContent = data.error;
+                return;
+            }
+            
+            displayAdvancedAnalytics(data);
+            analyticsResults.style.display = 'block';
+        })
+        .catch(err => {
+            console.error('Error loading advanced analytics:', err);
+            loadingState.style.display = 'none';
+            errorState.style.display = 'block';
+            document.getElementById('errorMessage').textContent = err.message;
+        });
+}
+
+function displayAdvancedAnalytics(data) {
+    // Display growth rates
+    displayGrowthRates(data.growth_rates);
+    
+    // Display seasonality analysis
+    displaySeasonalityAnalysis(data.seasonality);
+    
+    // Display churn analysis
+    displayChurnAnalysis(data.churn_analysis);
+    
+    // Display anomaly detection
+    displayAnomalyDetection(data.anomaly_detection);
+    
+    // Display cash flow analysis
+    displayCashFlowAnalysis(data.cash_flow);
+    
+    // Display revenue concentration
+    displayRevenueConcentration(data.revenue_concentration);
+    
+    // Display CAC analysis
+    displayCACAnalysis(data.cac_analysis);
+    
+    // Load comparative analysis
+    loadComparativeAnalysis();
+}
+
+function displayGrowthRates(growthRates) {
+    const container = document.getElementById('growthMetrics');
+    
+    let html = '';
+    
+    if (growthRates.mom) {
+        html += `
+            <div class="col-md-4">
+                <div class="text-center p-3">
+                    <h4 class="text-primary">${growthRates.mom.current.toFixed(1)}%</h4>
+                    <p class="mb-1">Month-over-Month</p>
+                    <small class="text-muted">Trend: ${growthRates.mom.trend}</small>
+                </div>
+            </div>
+        `;
+    }
+    
+    if (growthRates.yoy) {
+        html += `
+            <div class="col-md-4">
+                <div class="text-center p-3">
+                    <h4 class="text-success">${growthRates.yoy.current.toFixed(1)}%</h4>
+                    <p class="mb-1">Year-over-Year</p>
+                    <small class="text-muted">Average: ${growthRates.yoy.average.toFixed(1)}%</small>
+                </div>
+            </div>
+        `;
+    }
+    
+    if (growthRates.cagr) {
+        html += `
+            <div class="col-md-4">
+                <div class="text-center p-3">
+                    <h4 class="text-info">${growthRates.cagr.toFixed(1)}%</h4>
+                    <p class="mb-1">CAGR</p>
+                    <small class="text-muted">Compound Annual Growth Rate</small>
+                </div>
+            </div>
+        `;
+    }
+    
+    container.innerHTML = html;
+}
+
+function displaySeasonalityAnalysis(seasonality) {
+    // Create seasonality chart
+    createSeasonalityChart(seasonality);
+    
+    // Display seasonal insights
+    const container = document.getElementById('seasonalInsights');
+    const insights = `
+        <div class="mb-3">
+            <h6>Peak Performance</h6>
+            <p class="mb-1"><strong>Best Month:</strong> ${seasonality.peak_month}</p>
+            <p class="mb-1"><strong>Best Quarter:</strong> ${seasonality.peak_quarter}</p>
+        </div>
+        <div class="mb-3">
+            <h6>Low Performance</h6>
+            <p class="mb-1"><strong>Worst Month:</strong> ${seasonality.low_month}</p>
+            <p class="mb-1"><strong>Worst Quarter:</strong> ${seasonality.low_quarter}</p>
+        </div>
+        <div>
+            <h6>Seasonality Index</h6>
+            <small class="text-muted">100 = Average performance</small>
+        </div>
+    `;
+    container.innerHTML = insights;
+}
+
+function createSeasonalityChart(seasonality) {
+    const ctx = document.getElementById('seasonalityChart').getContext('2d');
+    
+    if (seasonalityChart) {
+        seasonalityChart.destroy();
+    }
+    
+    const monthlyData = seasonality.monthly;
+    const months = Object.keys(monthlyData).map(Number).sort();
+    const revenues = months.map(m => monthlyData[m].revenue);
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    seasonalityChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: months.map(m => monthNames[m-1]),
+            datasets: [{
+                label: 'Monthly Revenue',
+                data: revenues,
+                borderColor: '#1A73E8',
+                backgroundColor: 'rgba(26, 115, 232, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '₦' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function displayChurnAnalysis(churnData) {
+    const container = document.getElementById('churnMetrics');
+    
+    const metricsHTML = `
+        <div class="col-6">
+            <div class="text-center p-2">
+                <h5 class="text-success">${churnData.retention_rate.toFixed(1)}%</h5>
+                <small>Retention Rate</small>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="text-center p-2">
+                <h5 class="text-danger">${churnData.churn_rate.toFixed(1)}%</h5>
+                <small>Churn Rate</small>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="text-center p-2">
+                <h5 class="text-primary">${churnData.active_customers}</h5>
+                <small>Active Customers</small>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="text-center p-2">
+                <h5 class="text-warning">${churnData.at_risk_customers}</h5>
+                <small>At Risk</small>
+            </div>
+        </div>
+    `;
+    
+    container.innerHTML = metricsHTML;
+    
+    // Create churn chart
+    createChurnChart(churnData);
+}
+
+function createChurnChart(churnData) {
+    const ctx = document.getElementById('churnChart').getContext('2d');
+    
+    if (churnChart) {
+        churnChart.destroy();
+    }
+    
+    const categories = churnData.customer_categories;
+    const labels = Object.keys(categories);
+    const data = Object.values(categories);
+    
+    churnChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: ['#0F9D58', '#F9AB00', '#EA4335', '#9C27B0']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+}
+
+function displayAnomalyDetection(anomalyData) {
+    const metricsContainer = document.getElementById('anomalyMetrics');
+    const listContainer = document.getElementById('anomalyList');
+    
+    const metricsHTML = `
+        <div class="col-6">
+            <div class="text-center p-2">
+                <h5 class="text-warning">${anomalyData.anomalous_transactions}</h5>
+                <small>Anomalous Transactions</small>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="text-center p-2">
+                <h5 class="text-info">${anomalyData.anomaly_rate.toFixed(2)}%</h5>
+                <small>Anomaly Rate</small>
+            </div>
+        </div>
+    `;
+    
+    metricsContainer.innerHTML = metricsHTML;
+    
+    // Display top anomalies
+    let anomaliesHTML = '<h6>Recent Anomalies</h6>';
+    anomalyData.anomalies.slice(0, 5).forEach(anomaly => {
+        anomaliesHTML += `
+            <div class="d-flex justify-content-between align-items-center mb-2 p-2 bg-light rounded">
+                <div>
+                    <strong>${anomaly.customer_name}</strong><br>
+                    <small class="text-muted">₦${anomaly.amount.toLocaleString()}</small>
+                </div>
+                <div class="text-end">
+                    <small class="text-warning">Score: ${anomaly.anomaly_score.toFixed(2)}</small>
+                </div>
+            </div>
+        `;
+    });
+    
+    listContainer.innerHTML = anomaliesHTML;
+}
+
+function displayCashFlowAnalysis(cashFlowData) {
+    const container = document.getElementById('cashFlowMetrics');
+    
+    const daily = cashFlowData.daily_cashflow;
+    const monthly = cashFlowData.monthly_cashflow;
+    
+    const metricsHTML = `
+        <div class="mb-3">
+            <h6>Daily Cash Flow</h6>
+            <p class="mb-1"><strong>Average:</strong> ₦${daily.average.toLocaleString()}</p>
+            <p class="mb-1"><strong>Volatility:</strong> ₦${daily.volatility.toLocaleString()}</p>
+            <p class="mb-1"><strong>Trend:</strong> ${daily.trend > 0 ? '↗️ Increasing' : '↘️ Decreasing'}</p>
+        </div>
+        <div class="mb-3">
+            <h6>Monthly Cash Flow</h6>
+            <p class="mb-1"><strong>Average:</strong> ₦${monthly.average.toLocaleString()}</p>
+            <p class="mb-1"><strong>Volatility:</strong> ₦${monthly.volatility.toLocaleString()}</p>
+            <p class="mb-1"><strong>Trend:</strong> ${monthly.trend > 0 ? '↗️ Increasing' : '↘️ Decreasing'}</p>
+        </div>
+    `;
+    
+    container.innerHTML = metricsHTML;
+    
+    // Create cash flow chart
+    createCashFlowChart(cashFlowData);
+}
+
+function createCashFlowChart(cashFlowData) {
+    const ctx = document.getElementById('cashFlowChart').getContext('2d');
+    
+    if (cashFlowChart) {
+        cashFlowChart.destroy();
+    }
+    
+    const dailyData = cashFlowData.cashflow_data.daily;
+    const dates = Object.keys(dailyData).sort();
+    const amounts = dates.map(date => dailyData[date]);
+    
+    cashFlowChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dates.map(date => new Date(date).toLocaleDateString()),
+            datasets: [{
+                label: 'Daily Cash Flow',
+                data: amounts,
+                borderColor: '#0F9D58',
+                backgroundColor: 'rgba(15, 157, 88, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '₦' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function displayRevenueConcentration(concentrationData) {
+    const container = document.getElementById('concentrationMetrics');
+    
+    const riskColor = concentrationData.risk_level === 'High' ? 'danger' : 
+                     concentrationData.risk_level === 'Moderate' ? 'warning' : 'success';
+    
+    const metricsHTML = `
+        <div class="mb-3">
+            <h6>Concentration Risk</h6>
+            <p class="mb-1"><strong>Risk Level:</strong> <span class="badge bg-${riskColor}">${concentrationData.risk_level}</span></p>
+            <p class="mb-1"><strong>HHI Index:</strong> ${concentrationData.hhi_index.toFixed(0)}</p>
+            <p class="mb-1"><strong>Top 10% Revenue:</strong> ${concentrationData.concentration_10.toFixed(1)}%</p>
+            <p class="mb-1"><strong>Top 20% Revenue:</strong> ${concentrationData.concentration_20.toFixed(1)}%</p>
+        </div>
+        <div>
+            <h6>Top Customers</h6>
+            <small class="text-muted">Revenue concentration</small>
+        </div>
+    `;
+    
+    container.innerHTML = metricsHTML;
+}
+
+function displayCACAnalysis(cacData) {
+    const container = document.getElementById('cacMetrics');
+    
+    const metricsHTML = `
+        <div class="mb-3">
+            <h6>Customer Acquisition Cost</h6>
+            <p class="mb-1"><strong>Overall CAC:</strong> ₦${cacData.overall_cac.toLocaleString()}</p>
+            <p class="mb-1"><strong>New Customers:</strong> ${cacData.total_new_customers}</p>
+            <p class="mb-1"><strong>Total Cost:</strong> ₦${cacData.estimated_total_cost.toLocaleString()}</p>
+        </div>
+        <div>
+            <h6>Monthly CAC Trend</h6>
+            <small class="text-muted">Cost per new customer by month</small>
+        </div>
+    `;
+    
+    container.innerHTML = metricsHTML;
+}
+
+function loadComparativeAnalysis() {
+    const period = document.getElementById('comparisonPeriod').value;
+    
+    fetch(`/api/comparative-analysis?period=${period}&current=3&previous=3`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.error) {
+                console.error('Comparative analysis error:', data.error);
+                return;
+            }
+            displayComparativeAnalysis(data);
+        })
+        .catch(err => {
+            console.error('Error loading comparative analysis:', err);
+        });
+}
+
+function displayComparativeAnalysis(data) {
+    const container = document.getElementById('comparisonMetrics');
+    const summary = data.summary;
+    
+    const metricsHTML = `
+        <div class="col-md-4">
+            <div class="text-center p-3">
+                <h4 class="${summary.revenue.change_percent >= 0 ? 'text-success' : 'text-danger'}">
+                    ${summary.revenue.change_percent >= 0 ? '+' : ''}${summary.revenue.change_percent.toFixed(1)}%
+                </h4>
+                <p class="mb-1">Revenue Change</p>
+                <small class="text-muted">
+                    ₦${summary.revenue.current.toLocaleString()} vs ₦${summary.revenue.previous.toLocaleString()}
+                </small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="text-center p-3">
+                <h4 class="${summary.transactions.change_percent >= 0 ? 'text-success' : 'text-danger'}">
+                    ${summary.transactions.change_percent >= 0 ? '+' : ''}${summary.transactions.change_percent.toFixed(1)}%
+                </h4>
+                <p class="mb-1">Transaction Change</p>
+                <small class="text-muted">
+                    ${summary.transactions.current.toFixed(0)} vs ${summary.transactions.previous.toFixed(0)}
+                </small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="text-center p-3">
+                <h4 class="${summary.customers.change_percent >= 0 ? 'text-success' : 'text-danger'}">
+                    ${summary.customers.change_percent >= 0 ? '+' : ''}${summary.customers.change_percent.toFixed(1)}%
+                </h4>
+                <p class="mb-1">Customer Change</p>
+                <small class="text-muted">
+                    ${summary.customers.current.toFixed(0)} vs ${summary.customers.previous.toFixed(0)}
+                </small>
+            </div>
+        </div>
+    `;
+    
+    container.innerHTML = metricsHTML;
+    
+    // Create comparison chart
+    createComparisonChart(data);
+}
+
+function createComparisonChart(data) {
+    const ctx = document.getElementById('comparisonChart').getContext('2d');
+    
+    if (comparisonChart) {
+        comparisonChart.destroy();
+    }
+    
+    const currentData = data.period_data.current;
+    const previousData = data.period_data.previous;
+    
+    const currentPeriods = Object.keys(currentData).sort();
+    const previousPeriods = Object.keys(previousData).sort();
+    
+    const currentRevenues = currentPeriods.map(period => currentData[period].revenue);
+    const previousRevenues = previousPeriods.map(period => previousData[period].revenue);
+    
+    comparisonChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: [...previousPeriods, ...currentPeriods],
+            datasets: [{
+                label: 'Previous Periods',
+                data: [...previousRevenues, ...new Array(currentRevenues.length).fill(null)],
+                backgroundColor: 'rgba(108, 117, 125, 0.6)',
+                borderColor: '#6c757d',
+                borderWidth: 1
+            }, {
+                label: 'Current Periods',
+                data: [...new Array(previousRevenues.length).fill(null), ...currentRevenues],
+                backgroundColor: 'rgba(26, 115, 232, 0.6)',
+                borderColor: '#1A73E8',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '₦' + value.toLocaleString();
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Event listeners
+document.getElementById('refreshAnalytics').addEventListener('click', loadAdvancedAnalytics);
+document.getElementById('timeFilter').addEventListener('change', loadAdvancedAnalytics);
+document.getElementById('loadComparison').addEventListener('click', loadComparativeAnalysis);
+document.getElementById('comparisonPeriod').addEventListener('change', loadComparativeAnalysis);
+
+// Load analytics on page load
+window.addEventListener('load', loadAdvancedAnalytics);
+</script>
+{% endblock %}

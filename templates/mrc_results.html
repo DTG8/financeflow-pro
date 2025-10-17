@@ -1,0 +1,323 @@
+{% extends "base.html" %}
+
+{% block title %}MRC Analysis Results - FinanceFlow Pro{% endblock %}
+
+{% block extra_styles %}
+<style>
+    .summary-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 16px;
+        margin-bottom: 32px;
+    }
+    
+    .stat-card {
+        background: linear-gradient(135deg, var(--primary), var(--info));
+        color: white;
+        border-radius: var(--radius-lg);
+        padding: 20px;
+        text-align: center;
+    }
+    
+    .stat-card.success {
+        background: linear-gradient(135deg, var(--success), #0B7A44);
+    }
+    
+    .stat-card.warning {
+        background: linear-gradient(135deg, var(--warning), #E37400);
+    }
+    
+    .stat-value {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+    
+    .stat-label {
+        font-size: 12px;
+        opacity: 0.9;
+    }
+    
+    .customer-table-container {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        margin-bottom: 24px;
+    }
+    
+    .customer-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .customer-table thead {
+        background: var(--bg-tertiary);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+    
+    .customer-table th {
+        padding: 16px 12px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 11px;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        border-bottom: 2px solid var(--border);
+    }
+    
+    .customer-table td {
+        padding: 14px 12px;
+        border-bottom: 1px solid var(--border-light);
+        color: var(--text-primary);
+        font-size: 13px;
+    }
+    
+    .customer-table tbody tr:hover {
+        background: var(--bg-secondary);
+    }
+    
+    .amount-cell {
+        font-weight: 600;
+        color: var(--success);
+    }
+    
+    .month-cell {
+        font-size: 12px;
+        text-align: center;
+    }
+    
+    .customer-table tbody tr {
+        transition: all 0.2s;
+    }
+    
+    .customer-table tbody tr:hover {
+        background: var(--bg-secondary);
+        transform: translateX(4px);
+        box-shadow: var(--shadow-sm);
+    }
+    
+    .export-section {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        padding: 24px;
+        text-align: center;
+        margin-bottom: 24px;
+    }
+    
+    .export-section h5 {
+        margin-bottom: 16px;
+        font-weight: 600;
+    }
+    
+    .export-buttons {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .btn-warning-clean {
+        background: linear-gradient(135deg, var(--warning), #E37400);
+        color: white;
+        padding: 12px 24px;
+        border-radius: var(--radius-md);
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        font-size: 14px;
+    }
+    
+    .btn-warning-clean:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(255, 193, 7, 0.3);
+        color: white;
+        text-decoration: none;
+    }
+    
+    .filter-bar {
+        background: var(--bg-primary);
+        border: 1px solid var(--border-light);
+        border-radius: var(--radius-lg);
+        padding: 16px;
+        margin-bottom: 24px;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+    }
+    
+    .filter-input {
+        padding: 8px 12px;
+        border: 1px solid var(--border);
+        background: var(--bg-secondary);
+        color: var(--text-primary);
+        border-radius: var(--radius);
+        font-size: 14px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1 class="page-title">MRC Analysis Results</h1>
+        <p class="page-subtitle">Customer revenue breakdown from {{ period }}</p>
+    </div>
+    
+    <!-- Summary Statistics -->
+    <div class="summary-stats">
+        <div class="stat-card success">
+            <div class="stat-value">₦{{ "{:,.0f}".format(total_mrc) }}</div>
+            <div class="stat-label">Total MRC</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ total_customers }}</div>
+            <div class="stat-label">Unique Customers</div>
+        </div>
+        <div class="stat-card warning">
+            <div class="stat-value">₦{{ "{:,.0f}".format(avg_mrc) }}</div>
+            <div class="stat-label">Avg MRC per Customer</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value">{{ total_transactions }}</div>
+            <div class="stat-label">Total Transactions</div>
+        </div>
+    </div>
+    
+    <!-- Export Section -->
+    <div class="export-section">
+        <h5><i class="fas fa-download me-2"></i>Export Analysis</h5>
+        <div class="export-buttons">
+            <a href="/mrc-analyzer/export/{{ session_id }}" class="btn-success-clean">
+                <i class="fas fa-file-excel me-2"></i>Download MRC Excel Report
+            </a>
+            <a href="/mrc-analyzer/cross-reference/{{ session_id }}" class="btn-warning-clean">
+                <i class="fas fa-search me-2"></i>Cross-Reference with Database
+            </a>
+            <a href="/mrc-analyzer" class="btn-primary-clean">
+                <i class="fas fa-upload me-2"></i>Analyze Another File
+            </a>
+        </div>
+        <p style="margin-top: 12px; font-size: 13px; color: var(--text-secondary);">
+            <strong>MRC Report:</strong> Summary + Individual customer sheets<br>
+            <strong>Cross-Reference:</strong> Match MRC customers with existing database transactions (Jan-Sep 2025)
+        </p>
+    </div>
+    
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+        <label style="font-weight: 600; color: var(--text-secondary);">
+            <i class="fas fa-filter"></i> Search:
+        </label>
+        <input type="text" id="searchInput" class="filter-input" placeholder="Search customer name..." style="flex: 1; max-width: 400px;">
+        <select id="sortBy" class="filter-input" onchange="sortTable()">
+            <option value="name">Sort by Name</option>
+            <option value="total" selected>Sort by Total MRC (High to Low)</option>
+            <option value="transactions">Sort by Transaction Count</option>
+        </select>
+    </div>
+    
+    <!-- Customer Summary Table -->
+    <div class="customer-table-container">
+        <table class="customer-table" id="customerTable">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Customer Name</th>
+                    <th>Total MRC</th>
+                    <th class="month-cell">Jan</th>
+                    <th class="month-cell">Feb</th>
+                    <th class="month-cell">Mar</th>
+                    <th class="month-cell">Apr</th>
+                    <th class="month-cell">May</th>
+                    <th class="month-cell">Jun</th>
+                    <th class="month-cell">Jul</th>
+                    <th class="month-cell">Aug</th>
+                    <th class="month-cell">Sep</th>
+                    <th>Txn Count</th>
+                </tr>
+            </thead>
+            <tbody id="customerTableBody">
+                {% for customer in customers %}
+                <tr style="cursor: pointer;" onclick="window.location.href='/mrc-analyzer/customer/{{ session_id }}/{{ customer.name | urlencode }}'">
+                    <td>{{ loop.index }}</td>
+                    <td style="font-weight: 600; color: var(--primary);">
+                        <i class="fas fa-user-circle me-2"></i>{{ customer.name }}
+                    </td>
+                    <td class="amount-cell">₦{{ "{:,.0f}".format(customer.total_mrc) }}</td>
+                    <td class="month-cell">{{ "₦{:,.0f}".format(customer.monthly.get('January', 0)) if customer.monthly.get('January', 0) > 0 else '-' }}</td>
+                    <td class="month-cell">{{ "₦{:,.0f}".format(customer.monthly.get('February', 0)) if customer.monthly.get('February', 0) > 0 else '-' }}</td>
+                    <td class="month-cell">{{ "₦{:,.0f}".format(customer.monthly.get('March', 0)) if customer.monthly.get('March', 0) > 0 else '-' }}</td>
+                    <td class="month-cell">{{ "₦{:,.0f}".format(customer.monthly.get('April', 0)) if customer.monthly.get('April', 0) > 0 else '-' }}</td>
+                    <td class="month-cell">{{ "₦{:,.0f}".format(customer.monthly.get('May', 0)) if customer.monthly.get('May', 0) > 0 else '-' }}</td>
+                    <td class="month-cell">{{ "₦{:,.0f}".format(customer.monthly.get('June', 0)) if customer.monthly.get('June', 0) > 0 else '-' }}</td>
+                    <td class="month-cell">{{ "₦{:,.0f}".format(customer.monthly.get('July', 0)) if customer.monthly.get('July', 0) > 0 else '-' }}</td>
+                    <td class="month-cell">{{ "₦{:,.0f}".format(customer.monthly.get('August', 0)) if customer.monthly.get('August', 0) > 0 else '-' }}</td>
+                    <td class="month-cell">{{ "₦{:,.0f}".format(customer.monthly.get('September', 0)) if customer.monthly.get('September', 0) > 0 else '-' }}</td>
+                    <td>{{ customer.transaction_count }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Search functionality
+document.getElementById('searchInput').addEventListener('input', function() {
+    const searchTerm = this.value.toLowerCase();
+    const rows = document.querySelectorAll('#customerTableBody tr');
+    
+    rows.forEach(row => {
+        const customerName = row.cells[1].textContent.toLowerCase();
+        if (customerName.includes(searchTerm)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+});
+
+// Sort functionality
+function sortTable() {
+    const sortBy = document.getElementById('sortBy').value;
+    const tbody = document.getElementById('customerTableBody');
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    
+    rows.sort((a, b) => {
+        if (sortBy === 'name') {
+            const nameA = a.cells[1].textContent;
+            const nameB = b.cells[1].textContent;
+            return nameA.localeCompare(nameB);
+        } else if (sortBy === 'total') {
+            const amountA = parseFloat(a.cells[2].textContent.replace(/[₦,]/g, ''));
+            const amountB = parseFloat(b.cells[2].textContent.replace(/[₦,]/g, ''));
+            return amountB - amountA;
+        } else if (sortBy === 'transactions') {
+            const countA = parseInt(a.cells[13].textContent);
+            const countB = parseInt(b.cells[13].textContent);
+            return countB - countA;
+        }
+    });
+    
+    // Re-append rows in new order and update numbering
+    rows.forEach((row, index) => {
+        row.cells[0].textContent = index + 1;
+        tbody.appendChild(row);
+    });
+}
+</script>
+{% endblock %}
+
