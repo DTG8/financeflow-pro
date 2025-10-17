@@ -29,6 +29,10 @@ ALLOWED_EXTENSIONS = {'csv', 'xlsx', 'xls', 'pdf'}
 # Initialize database
 db = SQLAlchemy(app)
 
+# Create all tables
+with app.app_context():
+    db.create_all()
+
 # Create upload folder
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
@@ -3627,8 +3631,6 @@ def mrc_cross_reference(session_id):
 
 # ==================== DATABASE INITIALIZATION ====================
 
-    with app.app_context():
-        db.create_all()
 print("Database initialized successfully")
 
 if __name__ == '__main__':
