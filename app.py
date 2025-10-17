@@ -30,8 +30,16 @@ ALLOWED_EXTENSIONS = {'csv', 'xlsx', 'xls', 'pdf'}
 db = SQLAlchemy(app)
 
 # Create all tables
-with app.app_context():
-    db.create_all()
+def init_db():
+    with app.app_context():
+        try:
+            db.create_all()
+            print("✅ Database tables created successfully")
+        except Exception as e:
+            print(f"❌ Database creation error: {e}")
+
+# Initialize database on import
+init_db()
 
 # Create upload folder
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
